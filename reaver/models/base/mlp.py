@@ -1,6 +1,6 @@
 import gin
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Concatenate, Dense
+from tensorflow.python.keras.layers import Input, Concatenate, Dense
 from reaver.models.base.layers import Squeeze, Variable, RunningStatsNorm
 from reaver.envs.base import Spec
 

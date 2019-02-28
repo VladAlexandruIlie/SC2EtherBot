@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Lambda, Layer
+from tensorflow.python.keras.layers import Lambda, Layer
 
 
 class RunningStatsNorm(Layer):

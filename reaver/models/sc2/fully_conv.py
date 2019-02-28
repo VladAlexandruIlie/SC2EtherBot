@@ -1,9 +1,9 @@
 import gin
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras import Model
-from tensorflow.keras.initializers import VarianceScaling
-from tensorflow.keras.layers import Input, Concatenate, Dense, Embedding, Conv2D, Flatten, Lambda
+from tensorflow.python.keras import Model
+from tensorflow.python.keras.initializers import VarianceScaling
+from tensorflow.python.keras.layers import Input, Concatenate, Dense, Embedding, Conv2D, Flatten, Lambda
 from reaver.models.base.layers import Squeeze, Split, Transpose, Log, Broadcast2D
 
 
@@ -59,6 +59,7 @@ def spatial_block(name, space, cfg):
             block[i] = Embedding(input_dim=dim, output_dim=10)(block[i])
             # [N, H, W, C] -> [N, C, H, W]
             block[i] = Transpose([0, 3, 1, 2])(block[i])
+            # block[i] = Transpose([0, 2, 3, 1])(block[i])
         else:
             block[i] = Log()(block[i])
 

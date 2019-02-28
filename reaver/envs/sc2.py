@@ -21,16 +21,17 @@ class SC2Env(Env):
     You can also specify your own action set in the gin config file under SC2Env.action_ids
     Full list of available actions https://github.com/deepmind/pysc2/blob/master/pysc2/lib/actions.py#L447-L1008
     """
+
     def __init__(
-        self,
-        map_name='MoveToBeacon',
-        render=False,
-        reset_done=True,
-        max_ep_len=None,
-        spatial_dim=16,
-        step_mul=8,
-        obs_features=None,
-        action_ids=ACTIONS_MINIGAMES
+            self,
+            map_name='MoveToBeacon',
+            render=False,
+            reset_done=True,
+            max_ep_len=None,
+            spatial_dim=16,
+            step_mul=8,
+            obs_features=None,
+            action_ids=ACTIONS_MINIGAMES
     ):
         super().__init__(map_name, render, reset_done, max_ep_len)
 
@@ -79,7 +80,7 @@ class SC2Env(Env):
                 rgb_screen=None,
                 rgb_minimap=None
             )],
-            step_mul=self.step_mul,)
+            step_mul=self.step_mul, )
 
     def step(self, action):
         try:
@@ -128,6 +129,10 @@ class SC2Env(Env):
         from pysc2.env import mock_sc2_env
         mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
             features.parse_agent_interface_format(feature_screen=self.spatial_dim, feature_minimap=self.spatial_dim)])
+
+        # mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
+        #     features.parse_agent_interface_format(feature_screen=84, feature_minimap=64)])
+
         self.act_wrapper.make_spec(mock_env.action_spec())
         self.obs_wrapper.make_spec(mock_env.observation_spec())
         mock_env.close()
@@ -138,6 +143,11 @@ class ObservationWrapper:
         self.spec = None
         self.features = _features
         self.action_ids = action_ids
+
+        # self.feature_masks = {
+        #     'screen': [i for i, f in enumerate(features.SCREEN_FEATURES._fields) if f in _features['screen']],
+        #     'minimap': [i for i, f in enumerate(features.MINIMAP_FEATURES._fields) if f in _features['minimap']],
+        # }
 
         screen_feature_to_idx = {feat: idx for idx, feat in enumerate(features.SCREEN_FEATURES._fields)}
         minimap_feature_to_idx = {feat: idx for idx, feat in enumerate(features.MINIMAP_FEATURES._fields)}
@@ -169,7 +179,7 @@ class ObservationWrapper:
         spec = spec[0]
 
         default_dims = {
-            'available_actions': (len(self.action_ids), ),
+            'available_actions': (len(self.action_ids),),
         }
 
         screen_shape = (len(self.features['screen']), *spec['feature_screen'][1:])
@@ -228,15 +238,24 @@ class ActionWrapper:
             arg_name = arg_type.name
             if arg_name in self.args:
                 arg = action[self.args.index(arg_name)]
+
                 # pysc2 expects all args in their separate lists
                 if type(arg) not in [list, tuple]:
                     arg = [arg]
+
                 # pysc2 expects spatial coords, but we have flattened => attempt to fix
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
                     arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
+                    # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+                    # arg = [arg[0] % 16, arg[0] % 16]
+
                 args.append(arg)
             else:
                 args.append([defaults[arg_name]])
+
+        # type2 = actions.FUNCTIONS[fn_id].args
+        # print("Action: %s %s : %s " % (fn_id, type2.name, args))
+        # print(actions.FUNCTIONS[fn_id].args)
 
         return [actions.FunctionCall(fn_id, args)]
 

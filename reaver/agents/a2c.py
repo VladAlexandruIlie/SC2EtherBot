@@ -22,7 +22,7 @@ class AdvantageActorCriticAgent(SyncRunningAgent, ActorCriticAgent):
         policy_cls: PolicyType=None,
         sess_mgr: SessionManager=None,
         optimizer: tf.train.Optimizer=None,
-        n_envs=4,
+        n_envs=1,
         value_coef=DEFAULTS['value_coef'],
         entropy_coef=DEFAULTS['entropy_coef'],
         traj_len=DEFAULTS['traj_len'],
@@ -47,8 +47,10 @@ class AdvantageActorCriticAgent(SyncRunningAgent, ActorCriticAgent):
         policy_loss = -tf.reduce_mean(self.policy.logli * adv)
         value_loss = tf.reduce_mean((self.value - returns)**2) * self.value_coef
         entropy_loss = tf.reduce_mean(self.policy.entropy) * self.entropy_coef
+
         # we want to reduce policy and value errors, and maximize entropy
         # but since optimizer is minimizing the signs are opposite
+
         full_loss = policy_loss + value_loss - entropy_loss
 
         return full_loss, [policy_loss, value_loss, entropy_loss], [adv, returns]
