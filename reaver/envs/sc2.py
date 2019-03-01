@@ -58,8 +58,7 @@ class SC2Env(Env):
                 'screen': ['player_relative', 'selected', 'visibility_map', 'unit_hit_points_ratio', 'unit_density'],
                 'minimap': ['player_relative', 'selected', 'visibility_map', 'camera'],
                 # available actions should always be present and in first position
-                'non-spatial': ['available_actions', 'player']
-            }
+                'non-spatial': ['available_actions', 'player']}
 
         self.act_wrapper = ActionWrapper(spatial_dim, action_ids)
         self.obs_wrapper = ObservationWrapper(obs_features, action_ids)
@@ -246,13 +245,9 @@ class ActionWrapper:
 
                 # pysc2 expects spatial coords, but we have flattened => attempt to fix
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
-                    arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
-
-                # elif arg_name in "minimap":
-                #     arg = [(arg[0] // 4) % self.spatial_dim, (arg[0] // 4) // self.spatial_dim]
-                # else:
-                #     arg = [arg[0] % self.spatial_dim, arg[0]  // self.spatial_dim]
-                # arg = [arg[0] % 16, arg[0] % 16]
+                    arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
+                    # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+                    # arg = [arg[0] % 16, arg[0] % 16]
 
                 args.append(arg)
             else:
