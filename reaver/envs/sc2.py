@@ -234,6 +234,13 @@ class ActionWrapper:
         }
         fn_id_idx, args = action.pop(0), []
         fn_id = self.func_ids[fn_id_idx]
+
+        # try:
+        #     func = actions.FUNCTIONS[fn_id]
+        # except KeyError:
+        #     raise ValueError("Invalid function id: %s." % fn_id)
+
+        # fn_feature =
         for arg_type in actions.FUNCTIONS[fn_id].args:
             arg_name = arg_type.name
             if arg_name in self.args:
@@ -245,17 +252,36 @@ class ActionWrapper:
 
                 # pysc2 expects spatial coords, but we have flattened => attempt to fix
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
-                    arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
-                    # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
-                    # arg = [arg[0] % 16, arg[0] % 16]
+                    if arg_type.name in ("screen", "screen2"):
+                        size = 84
+                    elif arg_type.name == "minimap":
+                        size = 64
+                    else:
+                        size = self.spatial_dim
+
+                    # original:
+                    # print("transformed from : ", arg, " to [",
+                    #       arg[0] % self.spatial_dim, " - ", arg[0] // self.spatial_dim, "]")
+                    # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
+
+                    # divide by height:
+                    print("transformed from : ", arg, " to ["
+                          , (arg[0] // 5) % self.spatial_dim, " - ", (arg[0] // 5) // self.spatial_dim, "]")
+                    arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+
+                    # different sizes for each feature (minimap vs screen vs non-spatial)
+                    # print("transformed from : ", arg, " to [",
+                    #       arg[0] % size, " - ", arg[0] // size, "]")
+                    # arg = [arg[0] % size, arg[0] // size]
 
                 args.append(arg)
             else:
                 args.append([defaults[arg_name]])
 
-        # type2 = actions.FUNCTIONS[fn_id].args
-        # print("Action: %s %s : %s " % (fn_id, type2.name, args))
-        # print(actions.FUNCTIONS[fn_id].args)
+        type2 = actions.FUNCTIONS[fn_id]
+        # type2arg = type2.args
+        print("Action: %s -> %s : %s " % (fn_id, type2, args))
+        # print(actions.FunctionCall(fn_id, args))
 
         return [actions.FunctionCall(fn_id, args)]
 
