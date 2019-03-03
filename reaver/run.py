@@ -13,7 +13,7 @@ flags.DEFINE_string('agent', 'a2c', 'Name of the agent. Must be one of (a2c, ppo
 flags.DEFINE_bool('render', True, 'Whether to render first(!) env.')
 flags.DEFINE_string('gpu', "", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
 
-flags.DEFINE_integer('n_envs', 1, 'Number of environments to execute in parallel.')
+flags.DEFINE_integer('n_envs', 8, 'Number of environments to execute in parallel.')
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
 flags.DEFINE_integer('ckpt_freq', 500, 'Number of train updates per one checkpoint save.')

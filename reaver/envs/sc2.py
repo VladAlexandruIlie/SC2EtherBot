@@ -245,9 +245,19 @@ class ActionWrapper:
 
                 # pysc2 expects spatial coords, but we have flattened => attempt to fix
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
+<<<<<<< HEAD
+                    arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+
+                # elif arg_name in "minimap":
+                #     arg = [(arg[0] // 4) % self.spatial_dim, (arg[0] // 4) // self.spatial_dim]
+                # else:
+                #     arg = [arg[0] % self.spatial_dim, arg[0]  // self.spatial_dim]
+                # arg = [arg[0] % 16, arg[0] % 16]
+=======
                     arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
                     # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
                     # arg = [arg[0] % 16, arg[0] % 16]
+>>>>>>> parent of cb6f4e5... testing different configs
 
                 args.append(arg)
             else:
