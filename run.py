@@ -67,7 +67,7 @@ def main(argv):
     expt = rvr.utils.Experiment(args.results_dir, args.env, args.agent, args.experiment, args.restore)
 
     # set-up gin
-    gin_files = rvr.utils.find_configs(args.env, os.path.dirname(os.path.abspath(__file__))+"/rever")
+    gin_files = rvr.utils.find_configs(args.env, os.path.dirname(os.path.abspath(__file__))+"/reaver")
 
     # restore point
     if args.restore:
