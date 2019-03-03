@@ -252,7 +252,6 @@ class ActionWrapper:
 
                 # pysc2 expects spatial coords, but we have flattened => attempt to fix
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
-<<<<<<< HEAD
                     arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
 
                 # elif arg_name in "minimap":
@@ -260,11 +259,10 @@ class ActionWrapper:
                 # else:
                 #     arg = [arg[0] % self.spatial_dim, arg[0]  // self.spatial_dim]
                 # arg = [arg[0] % 16, arg[0] % 16]
-=======
-                    arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
+
+                    # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
                     # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
                     # arg = [arg[0] % 16, arg[0] % 16]
->>>>>>> parent of cb6f4e5... testing different configs
 
                     # original:
                     # print("transformed from : ", arg, " to [",
@@ -272,9 +270,9 @@ class ActionWrapper:
                     # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
 
                     # divide by height:
-                    print("transformed from : ", arg, " to ["
-                          , (arg[0] // 5) % self.spatial_dim, " - ", (arg[0] // 5) // self.spatial_dim, "]")
-                    arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+                    # print("transformed from : ", arg, " to ["
+                    #       , (arg[0] // 5) % self.spatial_dim, " - ", (arg[0] // 5) // self.spatial_dim, "]")
+                    # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
 
                     # different sizes for each feature (minimap vs screen vs non-spatial)
                     # print("transformed from : ", arg, " to [",
@@ -287,7 +285,7 @@ class ActionWrapper:
 
         type2 = actions.FUNCTIONS[fn_id]
         # type2arg = type2.args
-        print("Action: %s -> %s : %s " % (fn_id, type2, args))
+        # print("Action: %s -> %s : %s " % (fn_id, type2, args))
         # print(actions.FunctionCall(fn_id, args))
 
         return [actions.FunctionCall(fn_id, args)]
