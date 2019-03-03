@@ -10,10 +10,10 @@ numpy.warnings.filterwarnings('ignore')
 flags.DEFINE_string('env', None, 'Either Gym env id or PySC2 map name to run agent in.')
 flags.DEFINE_string('agent', 'a2c', 'Name of the agent. Must be one of (a2c, ppo).')
 
-flags.DEFINE_bool('render', True, 'Whether to render first(!) env.')
+flags.DEFINE_bool('render', False, 'Whether to render first(!) env.')
 flags.DEFINE_string('gpu', "", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
 
-flags.DEFINE_integer('n_envs', 8, 'Number of environments to execute in parallel.')
+flags.DEFINE_integer('n_envs', 32, 'Number of environments to execute in parallel.')
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
 flags.DEFINE_integer('ckpt_freq', 500, 'Number of train updates per one checkpoint save.')
@@ -67,7 +67,7 @@ def main(argv):
     expt = rvr.utils.Experiment(args.results_dir, args.env, args.agent, args.experiment, args.restore)
 
     # set-up gin
-    gin_files = rvr.utils.find_configs(args.env, os.path.dirname(os.path.abspath(__file__))+"/rever")
+    gin_files = rvr.utils.find_configs(args.env, os.path.dirname(os.path.abspath(__file__))+"/reaver")
 
     # restore point
     if args.restore:
