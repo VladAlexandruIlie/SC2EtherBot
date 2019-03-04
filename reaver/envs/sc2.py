@@ -28,7 +28,8 @@ class SC2Env(Env):
             render=False,
             reset_done=True,
             max_ep_len=None,
-            spatial_dim=16,
+            screen_spatial_dim=84,
+            minimap_spacial_dim=84,
             step_mul=8,
             obs_features=None,
             action_ids=ACTIONS_MINIGAMES
@@ -36,7 +37,8 @@ class SC2Env(Env):
         super().__init__(map_name, render, reset_done, max_ep_len)
 
         self.step_mul = step_mul
-        self.spatial_dim = spatial_dim
+        self.screen_spatial_dim = screen_spatial_dim
+        self.minimap_spacial_dim = minimap_spacial_dim
         self._env = None
 
         # sensible action set for all minigames
@@ -60,7 +62,7 @@ class SC2Env(Env):
                 # available actions should always be present and in first position
                 'non-spatial': ['available_actions', 'player']}
 
-        self.act_wrapper = ActionWrapper(spatial_dim, action_ids)
+        self.act_wrapper = ActionWrapper(self.screen_spatial_dim, self.minimap_spacial_dim,  action_ids)
         self.obs_wrapper = ObservationWrapper(obs_features, action_ids)
 
     def start(self):
@@ -75,8 +77,8 @@ class SC2Env(Env):
             map_name=self.id,
             visualize=self.render,
             agent_interface_format=[features.parse_agent_interface_format(
-                feature_screen=self.spatial_dim,
-                feature_minimap=self.spatial_dim,
+                feature_screen=self.screen_spatial_dim,
+                feature_minimap=self.minimap_spacial_dim,
                 rgb_screen=None,
                 rgb_minimap=None
             )],
@@ -128,7 +130,7 @@ class SC2Env(Env):
         # importing here to lazy-load
         from pysc2.env import mock_sc2_env
         mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
-            features.parse_agent_interface_format(feature_screen=self.spatial_dim, feature_minimap=self.spatial_dim)])
+            features.parse_agent_interface_format(feature_screen=self.screen_spatial_dim, feature_minimap=self.minimap_spacial_dim)])
 
         # mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
         #     features.parse_agent_interface_format(feature_screen=84, feature_minimap=64)])
@@ -143,11 +145,6 @@ class ObservationWrapper:
         self.spec = None
         self.features = _features
         self.action_ids = action_ids
-
-        # self.feature_masks = {
-        #     'screen': [i for i, f in enumerate(features.SCREEN_FEATURES._fields) if f in _features['screen']],
-        #     'minimap': [i for i, f in enumerate(features.MINIMAP_FEATURES._fields) if f in _features['minimap']],
-        # }
 
         screen_feature_to_idx = {feat: idx for idx, feat in enumerate(features.SCREEN_FEATURES._fields)}
         minimap_feature_to_idx = {feat: idx for idx, feat in enumerate(features.MINIMAP_FEATURES._fields)}
@@ -201,7 +198,7 @@ class ObservationWrapper:
 
 
 class ActionWrapper:
-    def __init__(self, spatial_dim, action_ids, args=None):
+    def __init__(self, screen_spatial_dim, minimap_spacial_dim, action_ids, args=None):
         self.spec = None
         if not args:
             args = [
@@ -220,7 +217,7 @@ class ActionWrapper:
                 # 'unload_id'
             ]
         self.func_ids = action_ids
-        self.args, self.spatial_dim = args, spatial_dim
+        self.args, self.screen_dim, self.minimap_dim = args, screen_spatial_dim, minimap_spacial_dim
 
     def __call__(self, action):
         defaults = {
@@ -235,12 +232,6 @@ class ActionWrapper:
         fn_id_idx, args = action.pop(0), []
         fn_id = self.func_ids[fn_id_idx]
 
-        # try:
-        #     func = actions.FUNCTIONS[fn_id]
-        # except KeyError:
-        #     raise ValueError("Invalid function id: %s." % fn_id)
-
-        # fn_feature =
         for arg_type in actions.FUNCTIONS[fn_id].args:
             arg_name = arg_type.name
             if arg_name in self.args:
@@ -252,7 +243,14 @@ class ActionWrapper:
 
                 # pysc2 expects spatial coords, but we have flattened => attempt to fix
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
-                    arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+                    arg = [arg[0] % self.screen_dim, arg[0] // self.screen_dim]
+
+                    # if arg_name in "screen" or "screen2":
+                    #     arg = [(arg[0] // 5) % self.screen_dim, (arg[0] // 5) // self.screen_dim]
+                    # elif arg_name in "minimap":
+                    #     arg = [(arg[0] // 5) % self.minimap_dim, (arg[0] // 5) // self.minimap_dim]
+                    # # else:
+                    # #     arg = [(arg[0] // 5) % self.minimap_dim, (arg[0] // 5) // self.minimap_dim]
 
                 # elif arg_name in "minimap":
                 #     arg = [(arg[0] // 4) % self.spatial_dim, (arg[0] // 4) // self.spatial_dim]
@@ -285,7 +283,7 @@ class ActionWrapper:
 
         type2 = actions.FUNCTIONS[fn_id]
         # type2arg = type2.args
-        # print("Action: %s -> %s : %s " % (fn_id, type2, args))
+        print("Action: %s -> %s : %s " % (fn_id, type2, args))
         # print(actions.FunctionCall(fn_id, args))
 
         return [actions.FunctionCall(fn_id, args)]
