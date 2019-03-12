@@ -28,8 +28,8 @@ class SC2Env(Env):
             render=False,
             reset_done=True,
             max_ep_len=None,
-            screen_spatial_dim=84,
-            minimap_spacial_dim=84,
+            screen_spatial_dim=16,
+            minimap_spacial_dim=16,
             step_mul=8,
             obs_features=None,
             action_ids=ACTIONS_MINIGAMES

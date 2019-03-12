@@ -1,10 +1,11 @@
+import glob
 import os
 import gin
 from datetime import datetime as dt
 
 
 class Experiment:
-    def __init__(self, results_dir, env_name, agent_name, name=None, restore=False):
+    def __init__(self, results_dir, env_name, agent_name, name=None, restore=False, roe=False):
         if not name:
             if restore:
                 experiments = [e for e in os.listdir(results_dir) if env_name in e and agent_name in e]
@@ -19,12 +20,39 @@ class Experiment:
         self.env_name = env_name
         self.agent_name = agent_name
         self.results_dir = results_dir
-
         os.makedirs(self.path, exist_ok=True)
         os.makedirs(self.path + '/summaries', exist_ok=True)
         os.makedirs(self.results_dir + '/summaries', exist_ok=True)
         if not os.path.exists(self.summaries_path):
             os.symlink('../%s/summaries' % self.full_name, self.summaries_path)
+
+        reward_name = ""
+        if roe:
+            reward_name = "_event"
+
+        log_file_name = "pysc2" + env_name + reward_name + ".log"
+        log_event_file_name = "pysc2" + env_name + reward_name + ".eventlog"
+        log_event_reward_file_name = "pysc2" + env_name + reward_name + ".eventrewardlog"
+
+        try:
+            os.makedirs(self.event_log_path, exist_ok=True)
+        except OSError:
+            files = glob.glob(os.path.join(self.event_log_path, log_file_name))
+            for f in files:
+                os.remove(f)
+            with open(log_file_name, "w") as myfile:
+                myfile.write("")
+            files = glob.glob(os.path.join(self.event_log_path, log_event_file_name))
+            for f in files:
+                os.remove(f)
+            with open(log_event_file_name, "w") as myfile:
+                myfile.write("")
+            files = glob.glob(os.path.join(self.event_log_path, log_event_reward_file_name))
+            for f in files:
+                os.remove(f)
+            with open(log_event_reward_file_name, "w") as myfile:
+                myfile.write("")
+
 
     @property
     def full_name(self):
@@ -57,3 +85,11 @@ class Experiment:
     def save_model_summary(self, model):
         with open(self.path + '/' + 'model_summary.txt', 'w') as fl:
             model.summary(print_fn=lambda line: print(line, file=fl))
+
+    # def save_events_summary(self):
+    #     with open(self.event_log_path + '/' + 'events_summary.txt', 'w') as fl:
+    #         model.summary(print_fn=lambda line: print(line, file=fl))
+
+    @property
+    def event_log_path(self):
+        return '%s/%s' % (self.path, 'events')

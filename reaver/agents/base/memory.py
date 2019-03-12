@@ -25,6 +25,12 @@ class MemoryAgent(RunningAgent):
         self.obs = [np.empty(self.shape + s.shape, dtype=s.dtype) for s in obs_spec.spaces]
         self.last_obs = [np.empty((self.batch_sz, ) + s.shape, dtype=s.dtype) for s in obs_spec.spaces]
 
+        #  ROE additions
+        # num_of_events = 4
+        # episode_events = np.zeros(num_of_events)
+        episode_events = np.zeros([args.num_processes, args.num_events])
+        final_events = np.zeros([args.num_processes, args.num_events])
+
     def on_step(self, step, obs, action, reward, done, value=None):
         """
         Used as a callback by extending agents.

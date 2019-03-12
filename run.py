@@ -1,9 +1,12 @@
 import os
+import pickle
+
 import gin
 import tensorflow as tf
 from absl import app, flags
 import numpy
 import reaver as rvr
+from reaver.roe_utils.event_buffer import EventBufferSQLProxy, EventBuffer
 
 numpy.warnings.filterwarnings('ignore')
 
@@ -11,13 +14,13 @@ flags.DEFINE_string('env', None, 'Either Gym env id or PySC2 map name to run age
 flags.DEFINE_string('agent', 'a2c', 'Name of the agent. Must be one of (a2c, ppo).')
 
 flags.DEFINE_bool('render', False, 'Whether to render first(!) env.')
-flags.DEFINE_string('gpu', "", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
+flags.DEFINE_string('gpu', "0", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
 
-flags.DEFINE_integer('n_envs', 32, 'Number of environments to execute in parallel.')
+flags.DEFINE_integer('n_envs', 1, 'Number of environments to execute in parallel.')
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
-flags.DEFINE_integer('ckpt_freq', 500, 'Number of train updates per one checkpoint save.')
-flags.DEFINE_integer('log_freq', 100, 'Number of train updates per one console log.')
+flags.DEFINE_integer('ckpt_freq', 250, 'Number of train updates per one checkpoint save.')
+flags.DEFINE_integer('log_freq', 20, 'Number of train updates per one console log.')
 flags.DEFINE_integer('log_eps_avg', 100, 'Number of episodes to average for performance stats.')
 flags.DEFINE_integer('max_ep_len', None, 'Max number of steps an agent can take in an episode.')
 
@@ -35,6 +38,15 @@ flags.DEFINE_bool('test', False,
                   'Run an agent in test mode: restore flag is set to true and number of envs set to 1'
                   'Loss is calculated, but gradients are not applied.'
                   'Checkpoints, summaries, log files are not updated, but console logger is enabled.')
+
+flags.DEFINE_bool('roe', True,
+                  'Trains using Rairty of Events (default: False)')
+flags.DEFINE_integer('num-events', 4,
+                     'number of events to record (default: 4)')
+flags.DEFINE_integer('capacity', 100,
+                     'Size of the event buffer (default: 100)')
+flags.DEFINE_bool('qd', False,
+                  'RoE QD (default: False)')
 
 flags.DEFINE_alias('e', 'env')
 flags.DEFINE_alias('a', 'agent')
@@ -64,10 +76,13 @@ def main(argv):
         args.restore = True
 
     # create experiments directories
-    expt = rvr.utils.Experiment(args.results_dir, args.env, args.agent, args.experiment, args.restore)
+    if args.roe is True:
+        expt = rvr.utils.Experiment(args.results_dir, args.env, args.agent + "+roe", args.experiment, args.restore)
+    else:
+        expt = rvr.utils.Experiment(args.results_dir, args.env, args.agent, args.experiment, args.restore)
 
     # set-up gin
-    gin_files = rvr.utils.find_configs(args.env, os.path.dirname(os.path.abspath(__file__))+"/reaver")
+    gin_files = rvr.utils.find_configs(args.env, os.path.dirname(os.path.abspath(__file__)) + "/reaver")
 
     # restore point
     if args.restore:
@@ -98,7 +113,23 @@ def main(argv):
         expt.save_gin_config()
         expt.save_model_summary(agent.model)
 
-    agent.run(env, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
+    # ROE temp variables
+    episode_rewards = numpy.zeros([args.n_envs, 1])
+    final_rewards = numpy.zeros([args.n_envs, 1])
+    episode_intrinsic_rewards = numpy.zeros([args.n_envs, 1])
+    final_intrinsic_rewards = numpy.zeros([args.n_envs, 1])
+    episode_events = numpy.zeros([args.n_envs, args.num_events])
+    final_events = numpy.zeros([args.n_envs, args.num_events])
+
+    # Create event buffer
+    if args.qd:
+        event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
+    elif not args.restore:
+        event_buffer = EventBuffer(args.num_events, args.capacity)
+    else:
+        event_buffer = pickle.load(open(expt.event_log_path + args.env + "_event_buffer_temp.p", "rb"))
+
+    agent.run(env, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
 
 
 if __name__ == '__main__':
