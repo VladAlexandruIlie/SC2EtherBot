@@ -13,7 +13,7 @@ numpy.warnings.filterwarnings('ignore')
 flags.DEFINE_string('env', None, 'Either Gym env id or PySC2 map name to run agent in.')
 flags.DEFINE_string('agent', 'a2c', 'Name of the agent. Must be one of (a2c, ppo).')
 
-flags.DEFINE_bool('render', False, 'Whether to render first(!) env.')
+flags.DEFINE_bool('render', True, 'Whether to render first(!) env.')
 flags.DEFINE_string('gpu', "0", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
 
 flags.DEFINE_integer('n_envs', 1, 'Number of environments to execute in parallel.')
@@ -34,12 +34,12 @@ flags.DEFINE_bool('restore', False,
                   'Restore & continue previously executed experiment. '
                   'If experiment not specified then last modified is used.')
 
-flags.DEFINE_bool('test', False,
+flags.DEFINE_bool('test', True,
                   'Run an agent in test mode: restore flag is set to true and number of envs set to 1'
                   'Loss is calculated, but gradients are not applied.'
                   'Checkpoints, summaries, log files are not updated, but console logger is enabled.')
 
-flags.DEFINE_bool('roe', True,
+flags.DEFINE_bool('roe', False,
                   'Trains using Rairty of Events (default: False)')
 flags.DEFINE_integer('num-events', 4,
                      'number of events to record (default: 4)')
@@ -114,22 +114,25 @@ def main(argv):
         expt.save_model_summary(agent.model)
 
     # ROE temp variables
-    episode_rewards = numpy.zeros([args.n_envs, 1])
-    final_rewards = numpy.zeros([args.n_envs, 1])
-    episode_intrinsic_rewards = numpy.zeros([args.n_envs, 1])
-    final_intrinsic_rewards = numpy.zeros([args.n_envs, 1])
-    episode_events = numpy.zeros([args.n_envs, args.num_events])
-    final_events = numpy.zeros([args.n_envs, args.num_events])
+    # episode_rewards = numpy.zeros([args.n_envs, 1])
+    # final_rewards = numpy.zeros([args.n_envs, 1])
+    # episode_intrinsic_rewards = numpy.zeros([args.n_envs, 1])
+    # final_intrinsic_rewards = numpy.zeros([args.n_envs, 1])
+    # episode_events = numpy.zeros([args.n_envs, args.num_events])
+    # final_events = numpy.zeros([args.n_envs, args.num_events])
 
     # Create event buffer
-    if args.qd:
-        event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
-    elif not args.restore:
-        event_buffer = EventBuffer(args.num_events, args.capacity)
-    else:
-        event_buffer = pickle.load(open(expt.event_log_path + args.env + "_event_buffer_temp.p", "rb"))
+    # if args.qd:
+    #     event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
+    # elif not args.restore:
+    #     event_buffer = EventBuffer(args.num_events, args.capacity)
+    # else:
+    #     event_buffer = pickle.load(open(expt.event_log_path + args.env + "_event_buffer_temp.p", "rb"))
 
-    agent.run(env, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
+    if args.roe:
+        agent.run(env, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
+    else:
+        agent.run(env, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
 
 
 if __name__ == '__main__':

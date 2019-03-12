@@ -1,7 +1,6 @@
 import copy
 import pickle
-
-from reaver.roe_utils.event_buffer import EventBufferSQLProxy, EventBuffer
+from roe_utils.event_buffer import EventBufferSQLProxy, EventBuffer
 from . import Agent
 from reaver.envs.base import Env, MultiProcEnv
 import time
@@ -30,17 +29,16 @@ class RunningAgent(Agent):
         obs, *_ = env.reset()
         obs = [o.copy() for o in obs]
 
-
-
         for step in range(self.start_step, self.start_step + n_steps):
             # if args.demo:
             #     sleep(1 / 24)
 
             action, value = self.get_action_and_value(obs)
-            # action2=self.get_action(obs)
-
-            self.next_obs, reward, done, events = env.step(action)
+            self.next_obs, reward, done = env.step(action)
             self.on_step(step, obs, action, reward, done, value)
+
+            # self.next_obs, reward, done, events = env.step(action)
+            # self.on_step(step, obs, action, reward, done, value, events)
 
             obs = [o.copy() for o in self.next_obs]
             # time.sleep(0.1)

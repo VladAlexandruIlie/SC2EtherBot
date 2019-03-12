@@ -1,7 +1,7 @@
 import numpy as np
 #from vizdoom import *
 import math
-import mysql.connector
+# import mysql.connector
 
 
 class EventBufferSQLProxy:
@@ -16,12 +16,12 @@ class EventBufferSQLProxy:
         self.host = host
         self.user = user
         self.password = password
-        self.mydb = mysql.connector.connect(
-            host=host,
-            user=user,
-            passwd=password,
-            database=database
-        )
+        # self.mydb = mysql.connector.connect(
+        #     host=host,
+        #     user=user,
+        #     passwd=password,
+        #     database=database
+        # )
         self.cache = None
         
     def record_events(self, events, frame):

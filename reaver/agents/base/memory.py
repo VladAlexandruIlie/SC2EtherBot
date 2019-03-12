@@ -28,8 +28,8 @@ class MemoryAgent(RunningAgent):
         #  ROE additions
         # num_of_events = 4
         # episode_events = np.zeros(num_of_events)
-        episode_events = np.zeros([args.num_processes, args.num_events])
-        final_events = np.zeros([args.num_processes, args.num_events])
+        # episode_events = np.zeros([args.num_processes, args.num_events])
+        # final_events = np.zeros([args.num_processes, args.num_events])
 
     def on_step(self, step, obs, action, reward, done, value=None):
         """
