@@ -6,7 +6,7 @@ import tensorflow as tf
 from absl import app, flags
 import numpy
 import reaver as rvr
-from reaver.roe_utils.event_buffer import EventBufferSQLProxy, EventBuffer
+from roe_utils.event_buffer import EventBufferSQLProxy, EventBuffer
 
 numpy.warnings.filterwarnings('ignore')
 
