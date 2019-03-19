@@ -11,6 +11,41 @@ from . import Env, Spec, Space
 ACTIONS_MINIGAMES, ACTIONS_MINIGAMES_ALL, ACTIONS_ALL = ['minigames', 'minigames_all', 'all']
 
 
+def processEvents(obs):
+    _events_ind = []
+    for feature_map_idx in range(3, len(obs)):
+        for i in obs[feature_map_idx]:
+            _events_ind.append(i)
+    #
+    # events = {
+    #     'player_id': _events_ind[0],
+    #     'minerals': _events_ind[1],
+    #     'vespene': _events_ind[2],
+    #     'food_used': _events_ind[3],
+    #     'food_cap': _events_ind[4],
+    #     'food_army': _events_ind[5],
+    #     'food_workers': _events_ind[6],
+    #     'idle_worker_count': _events_ind[7],
+    #     'army_count': _events_ind[8],
+    #     'warp_gate_count':_events_ind[9],
+    #     'larva_count': _events_ind[10],
+    #     'score' : _events_ind[11],
+    #     'idle_production_time' : _events_ind[12],
+    #     'idle_worker_time' : _events_ind[13],
+    #     'total_value_units' : _events_ind[14],
+    #     'total_value_structures' : _events_ind[15],
+    #     'killed_value_units' : _events_ind[16],
+    #     'killed_value_structures' : _events_ind[17],
+    #     'collected_minerals' : _events_ind[18],
+    #     'collected_vespene' : _events_ind[19],
+    #     'collection_rate_minerals' : _events_ind[20],
+    #     'collection_rate_vespene' : _events_ind[21],
+    #     'spent_minerals' : _events_ind[22],
+    #     'spent_vespene' : _events_ind[23],
+    #     }
+
+    return _events_ind
+
 @gin.configurable
 class SC2Env(Env):
     """
@@ -60,9 +95,10 @@ class SC2Env(Env):
                 'screen': ['player_relative', 'selected', 'visibility_map', 'unit_hit_points_ratio', 'unit_density'],
                 'minimap': ['player_relative', 'selected', 'visibility_map', 'camera'],
                 # available actions should always be present and in first position
-                'non-spatial': ['available_actions', 'player']}
+                'non-spatial': ['available_actions', 'player', 'score_cumulative']
+            }
 
-        self.act_wrapper = ActionWrapper(self.screen_spatial_dim, self.minimap_spacial_dim,  action_ids)
+        self.act_wrapper = ActionWrapper(self.screen_spatial_dim, self.minimap_spacial_dim, action_ids)
         self.obs_wrapper = ObservationWrapper(obs_features, action_ids)
 
     def start(self):
@@ -87,16 +123,17 @@ class SC2Env(Env):
     def step(self, action):
         try:
             obs, reward, done = self.obs_wrapper(self._env.step(self.act_wrapper(action)))
+            event_indicators = processEvents(obs)
         except protocol.ConnectionError:
             # hacky fix from websocket timeout issue...
             # this results in faulty reward signals, but I guess it beats completely crashing...
             self.restart()
-            return self.reset(), 0, 1
+            return self.reset(), 0, 1, []
 
         if done and self.reset_done:
             obs = self.reset()
 
-        return obs, reward, done
+        return obs, reward, done, event_indicators
 
     def reset(self):
         try:
@@ -129,11 +166,11 @@ class SC2Env(Env):
     def make_specs(self):
         # importing here to lazy-load
         from pysc2.env import mock_sc2_env
-        mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
-            features.parse_agent_interface_format(feature_screen=self.screen_spatial_dim, feature_minimap=self.minimap_spacial_dim)])
 
-        # mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
-        #     features.parse_agent_interface_format(feature_screen=84, feature_minimap=64)])
+        mock_env = mock_sc2_env.SC2TestEnv(map_name=self.id, agent_interface_format=[
+            features.parse_agent_interface_format(feature_screen=self.screen_spatial_dim,
+                                                  feature_minimap=self.minimap_spacial_dim,
+                                                  use_feature_units=True)])
 
         self.act_wrapper.make_spec(mock_env.action_spec())
         self.obs_wrapper.make_spec(mock_env.observation_spec())
@@ -155,6 +192,7 @@ class ObservationWrapper:
         }
 
     def __call__(self, timestep):
+
         ts = timestep[0]
         obs, reward, done = ts.observation, ts.reward, ts.step_type == StepType.LAST
 
@@ -258,24 +296,24 @@ class ActionWrapper:
                 #     arg = [arg[0] % self.spatial_dim, arg[0]  // self.spatial_dim]
                 # arg = [arg[0] % 16, arg[0] % 16]
 
-                    # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
-                    # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
-                    # arg = [arg[0] % 16, arg[0] % 16]
+                # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
+                # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+                # arg = [arg[0] % 16, arg[0] % 16]
 
-                    # original:
-                    # print("transformed from : ", arg, " to [",
-                    #       arg[0] % self.spatial_dim, " - ", arg[0] // self.spatial_dim, "]")
-                    # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
+                # original:
+                # print("transformed from : ", arg, " to [",
+                #       arg[0] % self.spatial_dim, " - ", arg[0] // self.spatial_dim, "]")
+                # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
 
-                    # divide by height:
-                    # print("transformed from : ", arg, " to ["
-                    #       , (arg[0] // 5) % self.spatial_dim, " - ", (arg[0] // 5) // self.spatial_dim, "]")
-                    # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
+                # divide by height:
+                # print("transformed from : ", arg, " to ["
+                #       , (arg[0] // 5) % self.spatial_dim, " - ", (arg[0] // 5) // self.spatial_dim, "]")
+                # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
 
-                    # different sizes for each feature (minimap vs screen vs non-spatial)
-                    # print("transformed from : ", arg, " to [",
-                    #       arg[0] % size, " - ", arg[0] // size, "]")
-                    # arg = [arg[0] % size, arg[0] // size]
+                # different sizes for each feature (minimap vs screen vs non-spatial)
+                # print("transformed from : ", arg, " to [",
+                #       arg[0] % size, " - ", arg[0] // size, "]")
+                # arg = [arg[0] % size, arg[0] // size]
 
                 args.append(arg)
             else:

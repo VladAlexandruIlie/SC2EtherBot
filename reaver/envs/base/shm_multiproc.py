@@ -45,13 +45,13 @@ class ShmProcEnv(Env):
                     self._env.start()
                     self.w_conn.send(DONE)
                 elif msg == STEP:
-                    obs, rew, done = self._env.step(data)
-                    for shm, ob in zip(self.shm, obs + [rew, done]):
+                    obs, rew, done, events = self._env.step(data)
+                    for shm, ob in zip(self.shm, obs + [rew, done, events]):
                         np.copyto(dst=shm[self.idx], src=ob)
                     self.w_conn.send(DONE)
                 elif msg == RESET:
                     obs = self._env.reset()
-                    for shm, ob in zip(self.shm, obs + [0, 0]):
+                    for shm, ob in zip(self.shm, obs + [0, 0] + []):
                         np.copyto(dst=shm[self.idx], src=ob)
                     self.w_conn.send(DONE)
                 elif msg == STOP:
@@ -62,16 +62,17 @@ class ShmProcEnv(Env):
             self._env.stop()
             self.w_conn.close()
 
-
 class ShmMultiProcEnv(Env):
     """
     Parallel environments via multiprocessing + shared memory
     """
+
     def __init__(self, envs):
         super().__init__(envs[0].id)
         self.shm = [make_shared(len(envs), s) for s in envs[0].obs_spec().spaces]
         self.shm.append(make_shared(len(envs), Space((1,), name="reward")))
         self.shm.append(make_shared(len(envs), Space((1,), name="done")))
+        self.shm.append(make_shared(len(envs), Space((24,), name="events")))
         self.envs = [ShmProcEnv(env, idx, self.shm) for idx, env in enumerate(envs)]
 
     def start(self):
@@ -92,11 +93,12 @@ class ShmMultiProcEnv(Env):
     def _observe(self):
         self.wait()
 
-        obs = self.shm[:-2]
-        reward = np.squeeze(self.shm[-2], axis=-1)
-        done = np.squeeze(self.shm[-1], axis=-1)
+        obs = self.shm[:-3]
+        reward = np.squeeze(self.shm[-3], axis=-1)
+        done = np.squeeze(self.shm[-2], axis=-1)
+        events = self.shm[-1]
 
-        return obs, reward, done
+        return obs, reward, done, events
 
     def stop(self):
         for e in self.envs:
@@ -115,7 +117,7 @@ class ShmMultiProcEnv(Env):
 
 
 def make_shared(n_envs, obs_space):
-    shape = (n_envs, ) + obs_space.shape
+    shape = (n_envs,) + obs_space.shape
     raw = RawArray(to_ctype(obs_space.dtype), int(np.prod(shape)))
     return np.frombuffer(raw, dtype=obs_space.dtype).reshape(shape)
 

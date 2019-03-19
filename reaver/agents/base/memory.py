@@ -22,16 +22,21 @@ class MemoryAgent(RunningAgent):
         self.values = np.empty(self.shape, dtype=np.float32)
         self.rewards = np.empty(self.shape, dtype=np.float32)
         self.acts = [np.empty(self.shape + s.shape, dtype=s.dtype) for s in act_spec.spaces]
+
         self.obs = [np.empty(self.shape + s.shape, dtype=s.dtype) for s in obs_spec.spaces]
+        # self.obs.append(np.empty(self.shape, dtype=np.float32))
+
         self.last_obs = [np.empty((self.batch_sz, ) + s.shape, dtype=s.dtype) for s in obs_spec.spaces]
+        # self.last_obs.append(np.empty(self.shape, dtype=np.float32))
 
         #  ROE additions
-        # num_of_events = 4
+        # self.events=np.empty(self.shape + (24,), dtype=np.float32)
+        num_of_events = 4
         # episode_events = np.zeros(num_of_events)
         # episode_events = np.zeros([args.num_processes, args.num_events])
         # final_events = np.zeros([args.num_processes, args.num_events])
 
-    def on_step(self, step, obs, action, reward, done, value=None):
+    def on_step(self, step, obs, action, reward, done, value=None, events=None):
         """
         Used as a callback by extending agents.
         Note that here "step" refers to update step, rather than agent timestep
@@ -49,7 +54,10 @@ class MemoryAgent(RunningAgent):
         if value is not None:
             self.values[step, bs:be] = value
 
-        for i in range(len(obs)):
+        # if events is not None:
+        #     self.events[step, bs:be] = events
+
+        for i in range(len(obs)-1):
             self.obs[i][step, bs:be] = obs[i]
 
         for i in range(len(action)):
@@ -57,7 +65,7 @@ class MemoryAgent(RunningAgent):
 
         if (step+1) % self.traj_len == 0:
             # finished one trajectory
-            for i in range(len(obs)):
+            for i in range(len(obs)-1):
                 self.last_obs[i][bs:be] = self.next_obs[i]
             self.batch_ptr += reward.shape[0]
 
