@@ -62,6 +62,7 @@ class ShmProcEnv(Env):
             self._env.stop()
             self.w_conn.close()
 
+
 class ShmMultiProcEnv(Env):
     """
     Parallel environments via multiprocessing + shared memory

@@ -16,34 +16,6 @@ def processEvents(obs):
     for feature_map_idx in range(3, len(obs)):
         for i in obs[feature_map_idx]:
             _events_ind.append(i)
-    #
-    # events = {
-    #     'player_id': _events_ind[0],
-    #     'minerals': _events_ind[1],
-    #     'vespene': _events_ind[2],
-    #     'food_used': _events_ind[3],
-    #     'food_cap': _events_ind[4],
-    #     'food_army': _events_ind[5],
-    #     'food_workers': _events_ind[6],
-    #     'idle_worker_count': _events_ind[7],
-    #     'army_count': _events_ind[8],
-    #     'warp_gate_count':_events_ind[9],
-    #     'larva_count': _events_ind[10],
-    #     'score' : _events_ind[11],
-    #     'idle_production_time' : _events_ind[12],
-    #     'idle_worker_time' : _events_ind[13],
-    #     'total_value_units' : _events_ind[14],
-    #     'total_value_structures' : _events_ind[15],
-    #     'killed_value_units' : _events_ind[16],
-    #     'killed_value_structures' : _events_ind[17],
-    #     'collected_minerals' : _events_ind[18],
-    #     'collected_vespene' : _events_ind[19],
-    #     'collection_rate_minerals' : _events_ind[20],
-    #     'collection_rate_vespene' : _events_ind[21],
-    #     'spent_minerals' : _events_ind[22],
-    #     'spent_vespene' : _events_ind[23],
-    #     }
-
     return _events_ind
 
 @gin.configurable
@@ -138,6 +110,7 @@ class SC2Env(Env):
     def reset(self):
         try:
             obs, reward, done = self.obs_wrapper(self._env.reset())
+            # event_indicators = processEvents(obs)
         except protocol.ConnectionError:
             # hacky fix from websocket timeout issue...
             # this results in faulty reward signals, but I guess it beats completely crashing...

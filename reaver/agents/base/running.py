@@ -1,26 +1,24 @@
 import copy
+import numpy
+
+from reaver.envs.sc2 import processEvents
 from . import Agent
 from reaver.envs.base import Env, MultiProcEnv
 import time
 
 
-def processEvents(obs):
-    # _events_ind = []
-    # for feature_map_idx in range(3, len(obs)):
-    #     for i in obs[feature_map_idx]:
-    #         _events_ind.append(i)
-
+def getEvents(obs):
     events = {
-        'player_id':                [obs[f][0] for f in range(obs.shape[0])],
-        'minerals':                 [obs[f][1] for f in range(obs.shape[0])],
-        'vespene':                  [obs[f][2] for f in range(obs.shape[0])],
-        'food_used':                [obs[f][3] for f in range(obs.shape[0])],
-        'food_cap':                 [obs[f][4] for f in range(obs.shape[0])],
-        'food_army':                [obs[f][5] for f in range(obs.shape[0])],
-        'food_workers':             [obs[f][6] for f in range(obs.shape[0])],
-        'idle_worker_count':        [obs[f][7] for f in range(obs.shape[0])],
-        'army_count':               [obs[f][8] for f in range(obs.shape[0])],
-        'warp_gate_count':          [obs[f][9] for f in range(obs.shape[0])],
+        # 'player_id':                [obs[f][0] for f in range(obs.shape[0])],
+        'minerals':                  [obs[f][1] for f in range(obs.shape[0])],
+        'vespene':                   [obs[f][2] for f in range(obs.shape[0])],
+        'food_used':                 [obs[f][3] for f in range(obs.shape[0])],
+        'food_cap':                  [obs[f][4] for f in range(obs.shape[0])],
+        'food_army':                 [obs[f][5] for f in range(obs.shape[0])],
+        'food_workers':              [obs[f][6] for f in range(obs.shape[0])],
+        'idle_worker_count':         [obs[f][7] for f in range(obs.shape[0])],
+        'army_count':                [obs[f][8] for f in range(obs.shape[0])],
+        'warp_gate_count':           [obs[f][9] for f in range(obs.shape[0])],
         'larva_count':              [obs[f][10] for f in range(obs.shape[0])],
         'score':                    [obs[f][11] for f in range(obs.shape[0])],
         'idle_production_time':     [obs[f][12] for f in range(obs.shape[0])],
@@ -38,6 +36,26 @@ def processEvents(obs):
     }
 
     return events
+
+
+def getTriggeredEvents(previous_events, current_events):
+    event_triggers = numpy.copy(previous_events)
+
+    for env_no in range(event_triggers.shape[0]):
+        for event_idx in range(event_triggers.shape[1]):
+            if previous_events[env_no][event_idx] == current_events[env_no][event_idx]:
+                event_triggers[env_no][event_idx] = 0
+            if previous_events[env_no][event_idx] > current_events[env_no][event_idx]:
+                event_triggers[env_no][event_idx] = -1
+            if previous_events[env_no][event_idx] < current_events[env_no][event_idx]:
+                event_triggers[env_no][event_idx] = 1
+
+        # elif previous_events[][env_no] == current_events[][env_no]:
+        #     event_triggers[][env_no] = 0
+        # elif previous_events[][env_no] < current_events[][env_no]:
+        #     event_triggers[][env_no] = 1
+
+    return event_triggers
 
 
 class RunningAgent(Agent):
@@ -64,6 +82,8 @@ class RunningAgent(Agent):
         obs, *_ = env.reset()
         obs = [o.copy() for o in obs]
 
+        previous_events = None
+
         for step in range(self.start_step, self.start_step + n_steps):
             # if self.visualise:
             #     time.sleep(1 / 24)
@@ -75,13 +95,19 @@ class RunningAgent(Agent):
             #     self.on_step(step, obs, action, reward, done, value)
             # else:
 
-            self.next_obs, reward, done, event_indicators = env.step(action)
-            event_map = processEvents(event_indicators)
-            self.on_step(step, obs, action, reward, done, value, event_indicators)
+            self.next_obs, reward, done, current_events = env.step(action)
+            current_events_map = getEvents(current_events)
+            if previous_events is not None:
+                event_triggers = getTriggeredEvents(current_events, previous_events)
 
-            intrinsic_reward = []
-            for e in event_indicators:
-                intrinsic_reward.append(event_buffer.intrinsic_reward(e))
+            self.on_step(step, obs, action, reward, done, value, current_events_map)
+
+            # intrinsic_reward = []
+            # for e in current_events:
+            #     intrinsic_reward.append(event_buffer.intrinsic_reward(e))
+
+            previous_events = numpy.copy(current_events)
+            # previous_events_map = current_events_map
 
             obs = [o.copy() for o in self.next_obs]
 
