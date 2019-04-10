@@ -15,7 +15,8 @@ def processEvents(obs):
     _events_ind = []
     for feature_map_idx in range(3, len(obs)):
         for i in obs[feature_map_idx]:
-            _events_ind.append(i)
+            if not i == "\n":
+                _events_ind.append(i)
     return _events_ind
 
 @gin.configurable
@@ -39,7 +40,7 @@ class SC2Env(Env):
             minimap_spacial_dim=16,
             step_mul=8,
             obs_features=None,
-            action_ids=ACTIONS_MINIGAMES
+            action_ids=ACTIONS_ALL
     ):
         super().__init__(map_name, render, reset_done, max_ep_len)
 
@@ -96,6 +97,7 @@ class SC2Env(Env):
         try:
             obs, reward, done = self.obs_wrapper(self._env.step(self.act_wrapper(action)))
             event_indicators = processEvents(obs)
+
         except protocol.ConnectionError:
             # hacky fix from websocket timeout issue...
             # this results in faulty reward signals, but I guess it beats completely crashing...

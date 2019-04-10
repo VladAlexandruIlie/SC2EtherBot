@@ -121,8 +121,10 @@ def main():
     # These variables are used to compute average rewards for all processes.
     episode_rewards = torch.zeros([args.num_processes, 1])
     final_rewards = torch.zeros([args.num_processes, 1])
+
     episode_intrinsic_rewards = torch.zeros([args.num_processes, 1])
     final_intrinsic_rewards = torch.zeros([args.num_processes, 1])
+
     episode_events = torch.zeros([args.num_processes, args.num_events])
     final_events = torch.zeros([args.num_processes, args.num_events])
 
@@ -165,8 +167,9 @@ def main():
 
             reward = torch.from_numpy(np.expand_dims(np.stack(reward), 1)).float()
             intrinsic_reward = torch.from_numpy(np.expand_dims(np.stack(intrinsic_reward), 1)).float()
-            #events = torch.from_numpy(np.expand_dims(np.stack(events), args.num_events)).float()
+            # events = torch.from_numpy(np.expand_dims(np.stack(events), args.num_events)).float()
             events = torch.from_numpy(events).float()
+
             episode_rewards += reward
             episode_intrinsic_rewards += intrinsic_reward
             episode_events += events
@@ -186,6 +189,7 @@ def main():
             final_rewards *= masks
             final_intrinsic_rewards *= masks
             final_events *= masks
+
             final_rewards += (1 - masks) * episode_rewards
             final_intrinsic_rewards += (1 - masks) * episode_intrinsic_rewards
             final_events += (1 - masks) * episode_events

@@ -14,13 +14,13 @@ numpy.warnings.filterwarnings('ignore')
 flags.DEFINE_string('env', None, 'Either Gym env id or PySC2 map name to run agent in.')
 flags.DEFINE_string('agent', 'a2c', 'Name of the agent. Must be one of (a2c, ppo).')
 
-flags.DEFINE_bool('render', True, 'Whether to render first(!) env.')
+flags.DEFINE_bool('render', False, 'Whether to render first(!) env.')
 flags.DEFINE_string('gpu', "0", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
 
-flags.DEFINE_integer('n_envs', 1, 'Number of environments to execute in parallel.')
+flags.DEFINE_integer('n_envs', 32, 'Number of environments to execute in parallel.')
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
-flags.DEFINE_integer('ckpt_freq', 500, 'Number of train updates per one checkpoint save.')
+flags.DEFINE_integer('ckpt_freq', 50, 'Number of train updates per one checkpoint save.')
 flags.DEFINE_integer('log_freq', 100, 'Number of train updates per one console log.')
 flags.DEFINE_integer('log_eps_avg', 100, 'Number of episodes to average for performance stats.')
 flags.DEFINE_integer('max_ep_len', None, 'Max number of steps an agent can take in an episode.')
@@ -35,7 +35,7 @@ flags.DEFINE_bool('restore', False,
                   'Restore & continue previously executed experiment. '
                   'If experiment not specified then last modified is used.')
 
-flags.DEFINE_bool('test', False,
+flags.DEFINE_bool('test', True,
                   'Run an agent in test mode: restore flag is set to true and number of envs set to 1'
                   'Loss is calculated, but gradients are not applied.'
                   'Checkpoints, summaries, log files are not updated, but console logger is enabled.')
@@ -72,6 +72,7 @@ def main(argv):
 
     # test mode
     if args.test:
+        args.render = True
         args.n_envs = 1
         args.log_freq = 1
         args.restore = True
@@ -115,15 +116,17 @@ def main(argv):
         expt.save_model_summary(agent.model)
 
     # Create event buffer
-    if not args.restore:
-        event_buffer = EventBuffer(args.n_envs, args.capacity)
-    else:
-        event_buffer = pickle.load(open(expt.event_log_path + args.env + "_event_buffer_temp.p", "rb"))
+    # if not args.restore:
+    event_buffer = EventBuffer(args.n_envs, args.capacity)
+    # else:
+    #     event_buffer = pickle.load(open(expt.event_log_path + args.env + "_event_buffer_temp.p", "rb"))
 
-    if args.roe:
-        agent.run(env, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
-    else:
-        agent.run(env, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
+    # if args.roe:
+
+    agent.run(env, expt, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
+
+    # else:
+    #     agent.run(env, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
 
 
 if __name__ == '__main__':
