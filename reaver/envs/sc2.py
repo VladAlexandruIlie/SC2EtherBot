@@ -11,13 +11,65 @@ from . import Env, Spec, Space
 ACTIONS_MINIGAMES, ACTIONS_MINIGAMES_ALL, ACTIONS_ALL = ['minigames', 'minigames_all', 'all']
 
 
+# def getEvents(obs):
+#     events = {
+#         'player_id':                [obs[f][0] for f in range(obs.shape[0])],
+#         'minerals':                 [obs[f][1] for f in range(obs.shape[0])],
+#         'vespene':                  [obs[f][2] for f in range(obs.shape[0])],
+#         'food_used':                [obs[f][3] for f in range(obs.shape[0])],
+#         'food_cap':                 [obs[f][4] for f in range(obs.shape[0])],
+#         'food_army':                [obs[f][5] for f in range(obs.shape[0])],
+#         'food_workers':             [obs[f][6] for f in range(obs.shape[0])],
+#         'idle_worker_count':        [obs[f][7] for f in range(obs.shape[0])],  # negative effect on increment
+#         'army_count':               [obs[f][8] for f in range(obs.shape[0])],
+#         'warp_gate_count':          [obs[f][9] for f in range(obs.shape[0])],
+#         'larva_count':              [obs[f][10] for f in range(obs.shape[0])],
+#         'score':                    [obs[f][11] for f in range(obs.shape[0])],
+#         'idle_production_time':     [obs[f][12] for f in range(obs.shape[0])],  # negative effect on increment
+#         'idle_worker_time':         [obs[f][13] for f in range(obs.shape[0])],  # negative effect on increment
+#         'total_value_units':        [obs[f][14] for f in range(obs.shape[0])],
+#         'total_value_structures':   [obs[f][15] for f in range(obs.shape[0])],
+#         'killed_value_units':       [obs[f][16] for f in range(obs.shape[0])],
+#         'killed_value_structures':  [obs[f][17] for f in range(obs.shape[0])],
+#         'collected_minerals':       [obs[f][18] for f in range(obs.shape[0])],
+#         'collected_vespene':        [obs[f][19] for f in range(obs.shape[0])],
+#         'collection_rate_minerals': [obs[f][20] for f in range(obs.shape[0])],
+#         'collection_rate_vespene':  [obs[f][21] for f in range(obs.shape[0])],
+#         'spent_minerals':           [obs[f][22] for f in range(obs.shape[0])],
+#         'spent_vespene':            [obs[f][23] for f in range(obs.shape[0])],
+#     }
+#     return events
+
+
 def processEvents(obs):
-    _events_ind = []
+    all_events_ind = []
     for feature_map_idx in range(3, len(obs)):
         for i in obs[feature_map_idx]:
             if not i == "\n":
-                _events_ind.append(i)
-    return _events_ind
+                all_events_ind.append(i)
+
+    curated_events = [
+                      all_events_ind[11],       # [ 0 ] = score
+                      # all_events_ind[1],        # [ 1 ] = minerals
+                      # all_events_ind[2],        # [ 2 ] = vespene
+                      all_events_ind[18],       # [ 3 ] = collected minerals
+                      all_events_ind[19],       # [ 4 ] = collected vespene
+                      # all_events_ind[20],       # [ 5 ] = collection rate minerals
+                      # all_events_ind[21],       # [ 6 ] = collection rate vespene
+                      # all_events_ind[22],       # [ 7 ] = spent minerals
+                      # all_events_ind[23],       # [ 8 ] = spent vespene
+                      # all_events_ind[3],        # [ 9 ] = food used
+                      # all_events_ind[4],        # [ 10 ] = food cap
+                      # all_events_ind[5],        # [ 11 ] = food army
+                      # all_events_ind[6],        # [ 12 ] = food workers
+                      # all_events_ind[7],        # [ 13 ] = idle workers
+                      # all_events_ind[8],        # [ 14 ] = army count
+                      # all_events_ind[14],       # [ 15 ] = total value units
+                      # all_events_ind[15],       # [ 16 ] = total value structures
+                      # all_events_ind[16],       # [ 17 ] = killed value units
+                      # all_events_ind[17]        # [ 18 ] = killed value structures
+                      ]
+    return curated_events
 
 @gin.configurable
 class SC2Env(Env):
@@ -55,7 +107,8 @@ class SC2Env(Env):
 
         # some additional actions for minigames (not necessary to solve)
         if action_ids == ACTIONS_MINIGAMES_ALL:
-            action_ids += [11, 71, 72, 73, 74, 79, 140, 168, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
+            action_ids += [11, 71, 72, 73, 74, 79, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
+            # action_ids += [11, 71, 72, 73, 74, 79, 140, 168, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
 
         # full action space, including outdated / unusable to current race / usable only in certain cases
         if action_ids == ACTIONS_ALL:
@@ -112,7 +165,6 @@ class SC2Env(Env):
     def reset(self):
         try:
             obs, reward, done = self.obs_wrapper(self._env.reset())
-            # event_indicators = processEvents(obs)
         except protocol.ConnectionError:
             # hacky fix from websocket timeout issue...
             # this results in faulty reward signals, but I guess it beats completely crashing...
@@ -258,46 +310,9 @@ class ActionWrapper:
                 if len(arg_type.sizes) > 1 and len(arg) == 1:
                     arg = [arg[0] % self.screen_dim, arg[0] // self.screen_dim]
 
-                    # if arg_name in "screen" or "screen2":
-                    #     arg = [(arg[0] // 5) % self.screen_dim, (arg[0] // 5) // self.screen_dim]
-                    # elif arg_name in "minimap":
-                    #     arg = [(arg[0] // 5) % self.minimap_dim, (arg[0] // 5) // self.minimap_dim]
-                    # # else:
-                    # #     arg = [(arg[0] // 5) % self.minimap_dim, (arg[0] // 5) // self.minimap_dim]
-
-                # elif arg_name in "minimap":
-                #     arg = [(arg[0] // 4) % self.spatial_dim, (arg[0] // 4) // self.spatial_dim]
-                # else:
-                #     arg = [arg[0] % self.spatial_dim, arg[0]  // self.spatial_dim]
-                # arg = [arg[0] % 16, arg[0] % 16]
-
-                # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
-                # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
-                # arg = [arg[0] % 16, arg[0] % 16]
-
-                # original:
-                # print("transformed from : ", arg, " to [",
-                #       arg[0] % self.spatial_dim, " - ", arg[0] // self.spatial_dim, "]")
-                # arg = [arg[0] % self.spatial_dim, arg[0] // self.spatial_dim]
-
-                # divide by height:
-                # print("transformed from : ", arg, " to ["
-                #       , (arg[0] // 5) % self.spatial_dim, " - ", (arg[0] // 5) // self.spatial_dim, "]")
-                # arg = [(arg[0] // 5) % self.spatial_dim, (arg[0] // 5) // self.spatial_dim]
-
-                # different sizes for each feature (minimap vs screen vs non-spatial)
-                # print("transformed from : ", arg, " to [",
-                #       arg[0] % size, " - ", arg[0] // size, "]")
-                # arg = [arg[0] % size, arg[0] // size]
-
                 args.append(arg)
             else:
                 args.append([defaults[arg_name]])
-
-        type2 = actions.FUNCTIONS[fn_id]
-        # type2arg = type2.args
-        # print("Action: %s -> %s : %s " % (fn_id, type2, args))
-        # print(actions.FunctionCall(fn_id, args))
 
         return [actions.FunctionCall(fn_id, args)]
 

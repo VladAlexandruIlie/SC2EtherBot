@@ -144,6 +144,8 @@ def main():
 
     start = time.time()
     for j in np.arange(start_updates, num_updates):
+
+        # steps to perform for TEMPORAL DIFFERENCE
         for step in range(args.num_steps):
 
             value, action = actor_critic.act(Variable(rollouts.observations[step], volatile=True))
@@ -214,6 +216,7 @@ def main():
 
             rollouts.insert(step, current_obs, action.data, value.data, intrinsic_reward, masks)
 
+        # TEMPORAL DIFFERENCE done & now calculate everything else
         final_episode_reward = np.mean(event_episode_rewards, axis=0)
         event_episode_rewards = []
 

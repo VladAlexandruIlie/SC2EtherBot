@@ -26,33 +26,7 @@ class Experiment:
         if not os.path.exists(self.summaries_path):
             os.symlink('../%s/summaries' % self.full_name, self.summaries_path)
 
-        reward_name = ""
-        if roe:
-            reward_name = "_event"
-
-        log_file_name = "pysc2" + env_name + reward_name + ".log"
-        log_event_file_name = "pysc2" + env_name + reward_name + ".eventlog"
-        log_event_reward_file_name = "pysc2" + env_name + reward_name + ".eventrewardlog"
-
-        try:
-            os.makedirs(self.event_log_path, exist_ok=True)
-        except OSError:
-            files = glob.glob(os.path.join(self.event_log_path, log_file_name))
-            for f in files:
-                os.remove(f)
-            with open(log_file_name, "w") as myfile:
-                myfile.write("")
-            files = glob.glob(os.path.join(self.event_log_path, log_event_file_name))
-            for f in files:
-                os.remove(f)
-            with open(log_event_file_name, "w") as myfile:
-                myfile.write("")
-            files = glob.glob(os.path.join(self.event_log_path, log_event_reward_file_name))
-            for f in files:
-                os.remove(f)
-            with open(log_event_reward_file_name, "w") as myfile:
-                myfile.write("")
-
+        os.makedirs(self.event_log_path, exist_ok=True)
 
     @property
     def full_name(self):
@@ -90,6 +64,18 @@ class Experiment:
     #     with open(self.event_log_path + '/' + 'events_summary.txt', 'w') as fl:
     #         model.summary(print_fn=lambda line: print(line, file=fl))
 
+    # @property
+    # def event_path(self):
+    #     return '%s/%s' % (self.results_dir, 'events')
+
     @property
     def event_log_path(self):
         return '%s/%s' % (self.path, 'events')
+
+    @property
+    def event_log_pkl(self):
+        return '%s/%s' % (self.event_log_path, 'event_buffer.pkl')
+
+    @property
+    def event_log_txt(self):
+        return '%s/%s' % (self.event_log_path, 'event_buffer.txt')

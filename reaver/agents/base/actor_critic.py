@@ -97,9 +97,9 @@ class ActorCriticAgent(MemoryAgent):
     def get_action(self, obs):
         return self.sess_mgr.run(self.policy.sample, self.model.inputs, obs)
 
-    def on_step(self, step, obs, action, reward, done, value=None, events=None):
-        MemoryAgent.on_step(self, step, obs, action, reward, done, value, events)
-        self.logger.on_step(step, reward, done)
+    def on_step(self, step, obs, action, intrinsic_rew, game_reward, done, value=None):
+        MemoryAgent.on_step(self, step, obs, action, intrinsic_rew, game_reward, done, value)
+        self.logger.on_step(step, intrinsic_rew, game_reward, done)
 
         if not self.batch_ready():
             return
