@@ -50,24 +50,29 @@ def processEvents(obs):
 
     curated_events = [
                       all_events_ind[11],       # [ 0 ] = score
-                      # all_events_ind[1],        # [ 1 ] = minerals
-                      # all_events_ind[2],        # [ 2 ] = vespene
+                      all_events_ind[20],       # [ 1 ] = collection rate minerals
+                      all_events_ind[21],       # [ 2 ] = collection rate vespene
                       all_events_ind[18],       # [ 3 ] = collected minerals
                       all_events_ind[19],       # [ 4 ] = collected vespene
-                      # all_events_ind[20],       # [ 5 ] = collection rate minerals
-                      # all_events_ind[21],       # [ 6 ] = collection rate vespene
+
+                      all_events_ind[3],        # [ 9 ] = food used
+                      all_events_ind[4],        # [ 5 ] = food cap
+                      all_events_ind[6],        # [ 6 ] = food workers
+
+                      all_events_ind[12]        # [ 7 ] = idle prod time
+
+                      # all_events_ind[1],        # [ 1 ] = minerals
+                      # all_events_ind[2],        # [ 2 ] = vespene
                       # all_events_ind[22],       # [ 7 ] = spent minerals
                       # all_events_ind[23],       # [ 8 ] = spent vespene
-                      # all_events_ind[3],        # [ 9 ] = food used
-                      # all_events_ind[4],        # [ 10 ] = food cap
-                      # all_events_ind[5],        # [ 11 ] = food army
-                      # all_events_ind[6],        # [ 12 ] = food workers
+
                       # all_events_ind[7],        # [ 13 ] = idle workers
-                      # all_events_ind[8],        # [ 14 ] = army count
-                      # all_events_ind[14],       # [ 15 ] = total value units
-                      # all_events_ind[15],       # [ 16 ] = total value structures
-                      # all_events_ind[16],       # [ 17 ] = killed value units
-                      # all_events_ind[17]        # [ 18 ] = killed value structures
+                      # all_events_ind[5],        # [ 14 ] = food army
+                      # all_events_ind[8],        # [ 15 ] = army count
+                      # all_events_ind[14],       # [ 16 ] = total value units
+                      # all_events_ind[15],       # [ 17 ] = total value structures
+                      # all_events_ind[16],       # [ 18 ] = killed value units
+                      # all_events_ind[17]        # [ 19 ] = killed value structures
                       ]
     return curated_events
 
@@ -90,7 +95,7 @@ class SC2Env(Env):
             max_ep_len=None,
             screen_spatial_dim=16,
             minimap_spacial_dim=16,
-            step_mul=8,
+            step_mul=16,
             obs_features=None,
             action_ids=ACTIONS_ALL
     ):

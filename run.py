@@ -7,7 +7,6 @@ from absl import app, flags
 import numpy
 import reaver as rvr
 from roe_utils.event_buffer import EventBuffer
-
 numpy.warnings.filterwarnings('ignore')
 
 flags.DEFINE_string('env', None, 'Either Gym env id or PySC2 map name to run agent in.')
@@ -20,7 +19,7 @@ flags.DEFINE_integer('n_envs', 32, 'Number of environments to execute in paralle
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
 flags.DEFINE_integer('ckpt_freq', 100, 'Number of train updates per one checkpoint save.')
-flags.DEFINE_integer('log_freq', 32, 'Number of train updates per one console log.')
+flags.DEFINE_integer('log_freq', 25, 'Number of train updates per one console log.')
 flags.DEFINE_integer('log_eps_avg', 32, 'Number of episodes to average for performance stats.')
 flags.DEFINE_integer('max_ep_len', None, 'Max number of steps an agent can take in an episode.')
 
@@ -42,7 +41,7 @@ flags.DEFINE_bool('test', False,
 flags.DEFINE_bool('roe', True,
                   'Trains using Rairty of Events (default: False)')
 
-flags.DEFINE_integer('capacity', 320,
+flags.DEFINE_integer('capacity', 640,
                      'Size of the event buffer (default: 100)')
 
 flags.DEFINE_alias('e', 'env')

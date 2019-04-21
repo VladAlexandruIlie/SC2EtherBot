@@ -73,7 +73,7 @@ class ShmMultiProcEnv(Env):
         self.shm = [make_shared(len(envs), s) for s in envs[0].obs_spec().spaces]
         self.shm.append(make_shared(len(envs), Space((1,), name="reward")))
         self.shm.append(make_shared(len(envs), Space((1,), name="done")))
-        self.shm.append(make_shared(len(envs), Space((3,), name="events")))
+        self.shm.append(make_shared(len(envs), Space((9,), name="events")))
         self.envs = [ShmProcEnv(env, idx, self.shm) for idx, env in enumerate(envs)]
 
     def start(self):

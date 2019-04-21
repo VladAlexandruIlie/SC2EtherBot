@@ -25,10 +25,11 @@ class EventBuffer:
                 self.idx = 0
 
     def intrinsic_reward(self, events, vector=False):
+        eventsCopy = np.copy(events)
         if len(self.events) == 0:
             if vector:
                 return np.ones(self.n)
-            return events[0]
+            return np.sum(np.clip(events[0], -2, 2))
 
         mean = np.mean(self.events, axis=0)
         clip = np.clip(mean, self.event_clip, np.max(mean))
@@ -36,8 +37,11 @@ class EventBuffer:
         div = np.divide(np.ones([clip.size]), clip)
         # div = np.divide(np.ones([mean.size]), mean)
 
-        mul = np.multiply(div, events)
-        clip2 = np.clip(mul, a_min=None, a_max=2)
+        if eventsCopy[8] != 0.0:
+            eventsCopy[8] = mean[8] - eventsCopy[8]
+
+        mul = np.multiply(div, eventsCopy)
+        clip2 = np.clip(mul, a_min=-2, a_max=2)
 
         if vector:
             return mul
