@@ -7,8 +7,9 @@ import math
 
 class EventBuffer:
 
-    def __init__(self, n, capacity, event_clip=0.01):
+    def __init__(self, n, capacity, event_clip=0.01, events_number=12):
         self.n = n
+        self.events_number = events_number
         self.capacity = capacity
         self.idx = 0
         self.events = []
@@ -29,16 +30,14 @@ class EventBuffer:
         if len(self.events) == 0:
             if vector:
                 return np.ones(self.n)
-            return np.sum(np.clip(events[0], -2, 2))
+            clip_temp = np.clip(events[0], -2, 2)
+            sum0 = np.sum(clip_temp)
+            return sum0
 
         mean = np.mean(self.events, axis=0)
         clip = np.clip(mean, self.event_clip, np.max(mean))
 
         div = np.divide(np.ones([clip.size]), clip)
-        # div = np.divide(np.ones([mean.size]), mean)
-
-        if eventsCopy[8] != 0.0:
-            eventsCopy[8] = mean[8] - eventsCopy[8]
 
         mul = np.multiply(div, eventsCopy)
         clip2 = np.clip(mul, a_min=-2, a_max=2)
@@ -49,10 +48,14 @@ class EventBuffer:
 
     def get_event_mean(self):
         if len(self.events) == 0:
-            return np.zeros(self.n)
+            return np.zeros(self.events_number)
+
         mean = np.mean(self.events, axis=0)
         return mean
 
     def get_event_rewards(self):
         return self.intrinsic_reward(np.ones(self.n), vector=True)
+
+    def get_events_number(self):
+        return self.events_number
 

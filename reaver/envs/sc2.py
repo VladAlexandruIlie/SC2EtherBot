@@ -40,7 +40,6 @@ ACTIONS_MINIGAMES, ACTIONS_MINIGAMES_ALL, ACTIONS_ALL = ['minigames', 'minigames
 #     }
 #     return events
 
-
 def processEvents(obs):
     all_events_ind = []
     for feature_map_idx in range(3, len(obs)):
@@ -55,22 +54,23 @@ def processEvents(obs):
                       all_events_ind[18],       # [ 3 ] = collected minerals
                       all_events_ind[19],       # [ 4 ] = collected vespene
 
-                      all_events_ind[3],        # [ 9 ] = food used
-                      all_events_ind[4],        # [ 5 ] = food cap
-                      all_events_ind[6],        # [ 6 ] = food workers
+                      all_events_ind[3],        # [ 5 ] = food used
+                      all_events_ind[4],        # [ 6 ] = food cap
+                      all_events_ind[6],        # [ 7 ] = food workers
 
-                      all_events_ind[12]        # [ 7 ] = idle prod time
+                      all_events_ind[12],       # [ 8 ] = idle prod time
+                      all_events_ind[7],        # [ 9 ] = idle workers
+
+                      all_events_ind[14],       # [ 10 ] = total value units
+                      all_events_ind[15],       # [ 11 ] = total value structures
 
                       # all_events_ind[1],        # [ 1 ] = minerals
                       # all_events_ind[2],        # [ 2 ] = vespene
                       # all_events_ind[22],       # [ 7 ] = spent minerals
                       # all_events_ind[23],       # [ 8 ] = spent vespene
-
-                      # all_events_ind[7],        # [ 13 ] = idle workers
                       # all_events_ind[5],        # [ 14 ] = food army
                       # all_events_ind[8],        # [ 15 ] = army count
-                      # all_events_ind[14],       # [ 16 ] = total value units
-                      # all_events_ind[15],       # [ 17 ] = total value structures
+
                       # all_events_ind[16],       # [ 18 ] = killed value units
                       # all_events_ind[17]        # [ 19 ] = killed value structures
                       ]
@@ -86,7 +86,10 @@ class SC2Env(Env):
     You can also specify your own action set in the gin config file under SC2Env.action_ids
     Full list of available actions https://github.com/deepmind/pysc2/blob/master/pysc2/lib/actions.py#L447-L1008
     """
-
+    #
+    # step multiplier has to be 16 so that idle production time is not so broken
+    # idle production time is updated every 16 in game steps
+    #
     def __init__(
             self,
             map_name='MoveToBeacon',
@@ -97,7 +100,7 @@ class SC2Env(Env):
             minimap_spacial_dim=16,
             step_mul=16,
             obs_features=None,
-            action_ids=ACTIONS_ALL
+            action_ids=ACTIONS_MINIGAMES_ALL
     ):
         super().__init__(map_name, render, reset_done, max_ep_len)
 
@@ -112,12 +115,15 @@ class SC2Env(Env):
 
         # some additional actions for minigames (not necessary to solve)
         if action_ids == ACTIONS_MINIGAMES_ALL:
-            action_ids += [11, 71, 72, 73, 74, 79, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
-            # action_ids += [11, 71, 72, 73, 74, 79, 140, 168, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
+            # action_ids += [11, 71, 72, 73, 74, 79, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
+            action_ids += [11, 71, 72, 73, 74, 79, 140, 168, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
 
         # full action space, including outdated / unusable to current race / usable only in certain cases
         if action_ids == ACTIONS_ALL:
             action_ids = [f.id for f in actions.FUNCTIONS]
+
+        if action_ids == ACTIONS_ALL:
+            action_ids.remove(281)
 
         # by default use majority of obs features, except for some that are unnecessary for minigames
         # e.g. race-specific like creep and shields or redundant like player_id
@@ -126,6 +132,7 @@ class SC2Env(Env):
                 'screen': ['player_relative', 'selected', 'visibility_map', 'unit_hit_points_ratio', 'unit_density'],
                 'minimap': ['player_relative', 'selected', 'visibility_map', 'camera'],
                 # available actions should always be present and in first position
+                # 'non-spatial': ['available_actions']
                 'non-spatial': ['available_actions', 'player', 'score_cumulative']
             }
 

@@ -7,6 +7,7 @@ from absl import app, flags
 import numpy
 import reaver as rvr
 from roe_utils.event_buffer import EventBuffer
+
 numpy.warnings.filterwarnings('ignore')
 
 flags.DEFINE_string('env', None, 'Either Gym env id or PySC2 map name to run agent in.')
@@ -33,7 +34,7 @@ flags.DEFINE_bool('restore', False,
                   'Restore & continue previously executed experiment. '
                   'If experiment not specified then last modified is used.')
 
-flags.DEFINE_bool('test', False,
+flags.DEFINE_bool('test', True,
                   'Run an agent in test mode: restore flag is set to true and number of envs set to 1'
                   'Loss is calculated, but gradients are not applied.'
                   'Checkpoints, summaries, log files are not updated, but console logger is enabled.')
@@ -41,7 +42,7 @@ flags.DEFINE_bool('test', False,
 flags.DEFINE_bool('roe', True,
                   'Trains using Rairty of Events (default: False)')
 
-flags.DEFINE_integer('capacity', 640,
+flags.DEFINE_integer('capacity', 96,
                      'Size of the event buffer (default: 100)')
 
 flags.DEFINE_alias('e', 'env')
@@ -112,12 +113,13 @@ def main(argv):
         expt.save_model_summary(agent.model)
 
     # Create event buffer
+    events_number = 12
     exists = os.path.isfile(expt.event_log_pkl)
     if exists:
         with open(expt.event_log_pkl, "rb") as event_buffer_file:
             event_buffer = pickle.load(event_buffer_file)
     else:
-        event_buffer = EventBuffer(args.n_envs, args.capacity)
+        event_buffer = EventBuffer(args.n_envs, args.capacity, events_number=events_number)
 
     agent.run(env, expt, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
 

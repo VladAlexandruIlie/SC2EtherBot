@@ -4,131 +4,120 @@ import numpy as np
 from . import Agent
 from reaver.envs.base import Env, MultiProcEnv
 
-curated_events = [
-    # all_events_ind[11],  # [ 0 ] = score
-    # all_events_ind[20],  # [ 1 ] = collection rate minerals
-    # all_events_ind[21],  # [ 2 ] = collection rate vespene
-    # all_events_ind[18],  # [ 3 ] = collected minerals
-    # all_events_ind[19],  # [ 4 ] = collected vespene
-    # all_events_ind[3],   # [ 5 ] = food used
-    # all_events_ind[4],   # [ 6 ] = food cap
-    # all_events_ind[6],   # [ 7 ] = food workers
+# curated_events = [
+# all_events_ind[11],  # [ 0 ] = score
+# all_events_ind[20],  # [ 1 ] = collection rate minerals
+# all_events_ind[21],  # [ 2 ] = collection rate vespene
+# all_events_ind[18],  # [ 3 ] = collected minerals
+# all_events_ind[19],  # [ 4 ] = collected vespene
+#
+# all_events_ind[3],   # [ 5 ] = food used
+# all_events_ind[4],   # [ 6 ] = food cap
+# all_events_ind[6],   # [ 7 ] = food workers
+#
+# all_events_ind[12],  # [ 8 ] = idle prod time
+# all_events_ind[7],   # [ 9 ] = idle workers
+#
+# all_events_ind[14],  # [ 10 ] = total value units
+# all_events_ind[15],  # [ 11 ] = total value structures
 
-    # all_events_ind[12]   # [ 8 ] = idle prod time
-
-    # all_events_ind[1],        # [ 1 ] = minerals
-    # all_events_ind[2],        # [ 2 ] = vespene
-    # all_events_ind[22],       # [ 7 ] = spent minerals
-    # all_events_ind[23],       # [ 8 ] = spent vespene
-    # all_events_ind[3],        # [ 9 ] = food used
-    # all_events_ind[7],        # [ 13 ] = idle workers
-    # all_events_ind[5],        # [ 14 ] = food army
-    # all_events_ind[8],        # [ 15 ] = army count
-    # all_events_ind[14],       # [ 16 ] = total value units
-    # all_events_ind[15],       # [ 17 ] = total value structures
-    # all_events_ind[16],       # [ 18 ] = killed value units
-    # all_events_ind[17]        # [ 19 ] = killed value structures
-]
+# all_events_ind[1],        # [ 1 ] = minerals
+# all_events_ind[2],        # [ 2 ] = vespene
+# all_events_ind[22],       # [ 7 ] = spent minerals
+# all_events_ind[23],       # [ 8 ] = spent vespene
+# all_events_ind[7],        # [ 13 ] = idle workers
+# all_events_ind[5],        # [ 14 ] = food army
+# all_events_ind[8],        # [ 15 ] = army count
+# all_events_ind[14],       # [ 16 ] = total value units
+# all_events_ind[15],       # [ 17 ] = total value structures
+# all_events_ind[16],       # [ 18 ] = killed value units
+# all_events_ind[17]        # [ 19 ] = killed value structures
+# ]
 
 
-def getTriggeredEvents(previous_events, current_events):
+def getTriggeredEvents(event_buffer, previous_events, current_events):
     event_triggers = np.zeros([len(current_events), len(current_events[0])])
+
+    mean = event_buffer.get_event_mean()
 
     for env_no in range(event_triggers.shape[0]):
         for event_idx in range(event_triggers.shape[1]):
-            if event_idx in [3, 4]:
-                # strictly incremental positive NSF
-                if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-                    event_triggers[env_no][event_idx] = current_events[env_no][event_idx]
-
-            elif event_idx in [0, 1, 2]:
-                # mixed increments positive NSF
-                # small negative rewards
-                if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-                    event_triggers[env_no][event_idx] = current_events[env_no][event_idx]
-
-                elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
-                    event_triggers[env_no][event_idx] = current_events[env_no][event_idx] - \
-                                                        previous_events[env_no][event_idx]
-            elif event_idx in [5, 6, 7]:
-                # mixed increments positive NSF
-                # large negative rewards
+            if event_idx in [0, 3, 4]:
+                # strictly positive rewards
+                # collected minerals and gas never decrease
                 if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
                     event_triggers[env_no][event_idx] = previous_events[env_no][event_idx]
 
+            elif event_idx in [1, 2]:
+                # mixed increments positive NSF
+                # small rewards
+                event_triggers[env_no][event_idx] = current_events[env_no][event_idx] -\
+                                                    previous_events[env_no][event_idx]
+
+            elif event_idx in [5, 6, 7, 10, 11]:
+                # mixed increments positive NSF
+                # large negative rewards
+                if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
+                    event_triggers[env_no][event_idx] = previous_events[env_no][event_idx] - mean[event_idx]
                 elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
-                    event_triggers[env_no][event_idx] = -1 * previous_events[env_no][event_idx]
+                    event_triggers[env_no][event_idx] = (-1) * previous_events[env_no][event_idx]
+                elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
+                    event_triggers[env_no][event_idx] = previous_events[env_no][event_idx]
 
             elif event_idx in [8]:
-                # idle production time
-                # if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-                #     event_triggers[env_no][event_idx] = -1 * current_events[env_no][event_idx]
-                #
-                # el
-                if current_events[env_no][event_idx] <= previous_events[env_no][event_idx]:
-                    event_triggers[env_no][event_idx] = current_events[env_no][event_idx]
+                # negative effect on increment
+                # small rewards
+                # idle production time & idle workers count
+                if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
+                    event_triggers[env_no][event_idx] = previous_events[env_no][event_idx]
 
-        # if event_idx == 12:
-        #     # idle workers
-        #     # reward =  -( idle_workers_no / workers_no )
-        #     if current_events[env_no][event_idx] > 0:
-        #         event_triggers[env_no][event_idx] = - current_events[env_no][event_idx]
-        #     else:
-        #         event_triggers[env_no][event_idx] = 0.001
+                elif current_events[env_no][event_idx] > previous_events[env_no][event_idx] >= mean[event_idx]:
+                    event_triggers[env_no][event_idx] = current_events[env_no][event_idx] - \
+                                                            mean[event_idx]
+            elif event_idx in [9]:
+                # positive increments negative NSF
+                # small rewards
+                event_triggers[env_no][event_idx] = previous_events[env_no][event_idx] - \
+                                                    current_events[env_no][event_idx]
 
-        # if event_idx in [3, 4, 5, 6]:
-        #     # only positive reward
-        #     if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = current_events[env_no][event_idx]
+            # elif event_idx in [9]:
+            #     # mixed increments positive NSF
+            #     # small rewards
+            #     event_triggers[env_no][event_idx] = current_events[env_no][event_idx] -\
+            #                                         previous_events[env_no][event_idx]
 
-        # elif event_idx in []:
-        #     # only negative
-        #     if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = current_events[env_no][event_idx]
-        #
-        #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = current_events[env_no][event_idx] - \
-        #                                             previous_events[env_no][event_idx]
-
-        # if event_idx == 0:
-        #     # score indicator fix
-        #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 0
-        #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 1
-        # elif event_idx == 13:
-
-        #
-        # elif event_idx == 15:
-        #     # total value units fixes
-        #     # it increases by 600 after each game
-        #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 0
-        #     elif current_events[env_no][event_idx] == previous_events[env_no][event_idx] + 600:
-        #         event_triggers[env_no][event_idx] = 0
-        #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = -1
-        #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 1
-        #
-        # elif event_idx == 16:
-        #     # total value structure fixes
-        #     # it increases by 400 after each game
-        #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 0
-        #     elif current_events[env_no][event_idx] == previous_events[env_no][event_idx] + 400:
-        #         event_triggers[env_no][event_idx] = 0
-        #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = -1
-        #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 1
-        # else:
-        #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 0
-        #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = -1
-        #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
-        #         event_triggers[env_no][event_idx] = 1
+            # elif event_idx in [10, 11]:
+            #
+            # elif event_idx == 15:
+            #     # total value units fixes
+            #     # it increases by 600 after each game
+            #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = 0
+            #     elif current_events[env_no][event_idx] == previous_events[env_no][event_idx] + 600:
+            #         event_triggers[env_no][event_idx] = 0
+            #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = -1
+            #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = 1
+            #
+            # elif event_idx == 16:
+            #     # total value structure fixes
+            #     # it increases by 400 after each game
+            #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = 0
+            #     elif current_events[env_no][event_idx] == previous_events[env_no][event_idx] + 400:
+            #         event_triggers[env_no][event_idx] = 0
+            #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = -1
+            #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = 1
+            # else:
+            #     if current_events[env_no][event_idx] == previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = 0
+            #     elif current_events[env_no][event_idx] < previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = -1
+            #     elif current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
+            #         event_triggers[env_no][event_idx] = 1
 
     return event_triggers
 
@@ -157,11 +146,10 @@ class RunningAgent(Agent):
         obs, *_ = env.reset()
         obs = [o.copy() for o in obs]
 
-        event_number = 9
+        event_number = event_buffer.get_events_number()
         envs = len(obs[0])
 
         episode_rewards = np.zeros([1, envs])
-
 
         episode_intrinsic_rewards = np.zeros([1, envs])
 
@@ -173,7 +161,9 @@ class RunningAgent(Agent):
         # final_events = np.zeros([envs, event_number])
 
         # event_triggers = None
+
         previous_events = None
+        previous_broken_nsf = None
 
         with open(expt.event_log_txt, 'w') as outfile:
             np.savetxt(outfile, np.arange(event_number).reshape(1, event_number), fmt="%10.0f", delimiter="|")
@@ -186,27 +176,60 @@ class RunningAgent(Agent):
             # take action and observe effects
             self.next_obs, reward, done, current_events = env.step(action)
 
+            # fix broken non spatial feature for idle production time
             if previous_events is None:
                 for i in range(len(done)):
                     broken_nsf[i][8] = current_events[i][8]
+                    # broken_nsf[i][10] = current_events[i][10]
+                    # broken_nsf[i][11] = current_events[i][11]
+
             elif previous_events is not None and done[0]:
+                previous_broken_nsf = np.copy(broken_nsf)
                 for i in range(len(done)):
                     broken_nsf[i][8] = current_events[i][8]
+                    current_events[i][8] -= broken_nsf[i][8]
+
+                    broken_nsf[i][10] = current_events[i][10]
+                    current_events[i][10] -= broken_nsf[i][10]
+
+                    broken_nsf[i][11] = current_events[i][11]
+                    current_events[i][11] -= broken_nsf[i][11]
             else:
                 for i in range(len(done)):
                     current_events[i][8] -= broken_nsf[i][8]
-
+                    current_events[i][10] -= broken_nsf[i][10]
+                    current_events[i][11] -= broken_nsf[i][11]
 
             # If done then clean the history of observations.
             if done[0]:
 
                 # masks = 0.0
-
                 # final_rewards *= masks
                 # final_intrinsic_rewards *= masks
-
                 # final_rewards += episode_rewards
                 # final_intrinsic_rewards += episode_intrinsic_rewards
+
+                # idle production time reset in between games
+                for i in range(len(done)):
+                    if previous_broken_nsf is not None:
+                        if broken_nsf[i][8] > previous_broken_nsf[i][8]:
+                            previous_events[i][8] = broken_nsf[i][8] - previous_broken_nsf[i][8]
+                        elif broken_nsf[i][8] < previous_broken_nsf[i][8]:
+                            previous_events[i][8] = broken_nsf[i][8]
+
+                        if broken_nsf[i][10] > previous_broken_nsf[i][10]:
+                            previous_events[i][10] = broken_nsf[i][10] - previous_broken_nsf[i][10]
+                        elif broken_nsf[i][10] < previous_broken_nsf[i][10]:
+                            previous_events[i][10] = broken_nsf[i][10]
+
+                        if broken_nsf[i][11] > previous_broken_nsf[i][11]:
+                            previous_events[i][11] = broken_nsf[i][11] - previous_broken_nsf[i][11]
+                        elif broken_nsf[i][11] < previous_broken_nsf[i][11]:
+                            previous_events[i][11] = broken_nsf[i][11]
+                    else:
+                        previous_events[i][8] = broken_nsf[i][8]
+                        previous_events[i][10] = broken_nsf[i][10]
+                        previous_events[i][11] = broken_nsf[i][11]
 
                 final_events = np.zeros([envs, event_number])
                 final_events = np.copy(previous_events)
@@ -239,17 +262,13 @@ class RunningAgent(Agent):
             intrinsic_reward = []
 
             if previous_events is not None:
-                event_triggers = getTriggeredEvents(previous_events, current_events)
+                event_triggers = getTriggeredEvents(event_buffer, previous_events, current_events)
             else:
                 event_triggers = np.zeros([len(current_events), len(current_events[0])])
-
-
 
             # determine the importance of triggered events based on their rarity
             for e in event_triggers:
                 intrinsic_reward.append(event_buffer.intrinsic_reward(e))
-
-
 
             # remember reward, intrinsic rewards and events
             episode_rewards += reward

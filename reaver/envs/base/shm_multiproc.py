@@ -73,7 +73,7 @@ class ShmMultiProcEnv(Env):
         self.shm = [make_shared(len(envs), s) for s in envs[0].obs_spec().spaces]
         self.shm.append(make_shared(len(envs), Space((1,), name="reward")))
         self.shm.append(make_shared(len(envs), Space((1,), name="done")))
-        self.shm.append(make_shared(len(envs), Space((9,), name="events")))
+        self.shm.append(make_shared(len(envs), Space((12,), name="events")))
         self.envs = [ShmProcEnv(env, idx, self.shm) for idx, env in enumerate(envs)]
 
     def start(self):
@@ -94,7 +94,7 @@ class ShmMultiProcEnv(Env):
     def _observe(self):
         self.wait()
 
-        obs = self.shm[:-3]
+        obs = self.shm[:3]
         reward = np.squeeze(self.shm[-3], axis=-1)
         done = np.squeeze(self.shm[-2], axis=-1)
         events = self.shm[-1]
