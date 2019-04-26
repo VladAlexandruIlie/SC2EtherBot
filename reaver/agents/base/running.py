@@ -51,8 +51,9 @@ def getTriggeredEvents(event_buffer, previous_events, current_events):
             elif event_idx in [1, 2]:
                 # mixed increments positive NSF
                 # small rewards
-                event_triggers[env_no][event_idx] = current_events[env_no][event_idx] -\
-                                                    previous_events[env_no][event_idx]
+                if current_events[env_no][event_idx] > previous_events[env_no][event_idx]:
+                    event_triggers[env_no][event_idx] = current_events[env_no][event_idx] - \
+                                                           previous_events[env_no][event_idx]
 
             elif event_idx in [5, 6, 7, 10, 11]:
                 # mixed increments positive NSF

@@ -34,7 +34,7 @@ flags.DEFINE_bool('restore', False,
                   'Restore & continue previously executed experiment. '
                   'If experiment not specified then last modified is used.')
 
-flags.DEFINE_bool('test', True,
+flags.DEFINE_bool('test', False,
                   'Run an agent in test mode: restore flag is set to true and number of envs set to 1'
                   'Loss is calculated, but gradients are not applied.'
                   'Checkpoints, summaries, log files are not updated, but console logger is enabled.')

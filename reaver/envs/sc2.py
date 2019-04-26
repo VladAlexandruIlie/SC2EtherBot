@@ -100,7 +100,7 @@ class SC2Env(Env):
             minimap_spacial_dim=16,
             step_mul=16,
             obs_features=None,
-            action_ids=ACTIONS_MINIGAMES_ALL
+            action_ids=ACTIONS_ALL
     ):
         super().__init__(map_name, render, reset_done, max_ep_len)
 
@@ -122,7 +122,7 @@ class SC2Env(Env):
         if action_ids == ACTIONS_ALL:
             action_ids = [f.id for f in actions.FUNCTIONS]
 
-        if action_ids == ACTIONS_ALL:
+        if len(action_ids) > 500:
             action_ids.remove(281)
 
         # by default use majority of obs features, except for some that are unnecessary for minigames

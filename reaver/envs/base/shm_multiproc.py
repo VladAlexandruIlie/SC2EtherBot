@@ -94,7 +94,7 @@ class ShmMultiProcEnv(Env):
     def _observe(self):
         self.wait()
 
-        obs = self.shm[:3]
+        obs = self.shm[:4]
         reward = np.squeeze(self.shm[-3], axis=-1)
         done = np.squeeze(self.shm[-2], axis=-1)
         events = self.shm[-1]
