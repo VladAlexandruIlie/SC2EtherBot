@@ -20,7 +20,7 @@ flags.DEFINE_integer('n_envs', 32, 'Number of environments to execute in paralle
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
 flags.DEFINE_integer('ckpt_freq', 100, 'Number of train updates per one checkpoint save.')
-flags.DEFINE_integer('log_freq', 25, 'Number of train updates per one console log.')
+flags.DEFINE_integer('log_freq', 30, 'Number of train updates per one console log.')
 flags.DEFINE_integer('log_eps_avg', 32, 'Number of episodes to average for performance stats.')
 flags.DEFINE_integer('max_ep_len', None, 'Max number of steps an agent can take in an episode.')
 
@@ -42,7 +42,7 @@ flags.DEFINE_bool('test', False,
 flags.DEFINE_bool('roe', True,
                   'Trains using Rairty of Events (default: False)')
 
-flags.DEFINE_integer('capacity', 96,
+flags.DEFINE_integer('capacity', 160,
                      'Size of the event buffer (default: 100)')
 
 flags.DEFINE_alias('e', 'env')
@@ -113,13 +113,12 @@ def main(argv):
         expt.save_model_summary(agent.model)
 
     # Create event buffer
-    events_number = 12
     exists = os.path.isfile(expt.event_log_pkl)
     if exists:
         with open(expt.event_log_pkl, "rb") as event_buffer_file:
             event_buffer = pickle.load(event_buffer_file)
     else:
-        event_buffer = EventBuffer(args.n_envs, args.capacity, events_number=events_number)
+        event_buffer = EventBuffer(args.n_envs, args.capacity)
 
     agent.run(env, expt, event_buffer, args.n_updates * agent.traj_len * agent.batch_sz // args.n_envs)
 

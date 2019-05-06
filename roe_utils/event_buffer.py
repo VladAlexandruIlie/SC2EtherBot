@@ -40,7 +40,8 @@ class EventBuffer:
         div = np.divide(np.ones([clip.size]), clip)
 
         mul = np.multiply(div, eventsCopy)
-        clip2 = np.clip(mul, a_min=-2, a_max=2)
+
+        clip2 = np.clip(mul, a_min=-100, a_max=100)
 
         if vector:
             return mul
@@ -59,3 +60,5 @@ class EventBuffer:
     def get_events_number(self):
         return self.events_number
 
+    def set_event_number(self, event_capacity):
+        self.events_number = event_capacity

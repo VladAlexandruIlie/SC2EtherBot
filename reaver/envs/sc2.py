@@ -10,6 +10,24 @@ from . import Env, Spec, Space
 
 ACTIONS_MINIGAMES, ACTIONS_MINIGAMES_ALL, ACTIONS_ALL = ['minigames', 'minigames_all', 'all']
 
+# curated_events = [
+# all_events_ind[11],   # [ 0 ] = score
+# all_events_ind[20],   # [ 1 ] = collection rate minerals
+# all_events_ind[21],   # [ 2 ] = collection rate vespene
+# all_events_ind[18],   # [ 3 ] = collected minerals
+# all_events_ind[19],   # [ 4 ] = collected vespene
+#
+# all_events_ind[3],    # [ 5 ] = food used
+# all_events_ind[4],    # [ 6 ] = food cap
+# all_events_ind[6],    # [ 7 ] = food workers
+# all_events_ind[5],    # [ 8 ] = food army
+#
+# all_events_ind[12],  #  [ 9 ] = idle prod time
+# all_events_ind[7],   # [ 10 ] = idle workers
+#
+# all_events_ind[14],  # [ 11 ] = total value units
+# all_events_ind[15],  # [ 12 ] = total value structures
+# ]
 
 # def getEvents(obs):
 #     events = {
@@ -57,12 +75,13 @@ def processEvents(obs):
                       all_events_ind[3],        # [ 5 ] = food used
                       all_events_ind[4],        # [ 6 ] = food cap
                       all_events_ind[6],        # [ 7 ] = food workers
+                      # all_events_ind[5],        # [ 8 ] = food army
 
-                      all_events_ind[12],       # [ 8 ] = idle prod time
-                      all_events_ind[7],        # [ 9 ] = idle workers
+                      all_events_ind[12],       # [ 9 ] = idle prod time
+                      all_events_ind[7],        # [ 10 ] = idle workers
 
-                      all_events_ind[14],       # [ 10 ] = total value units
-                      all_events_ind[15],       # [ 11 ] = total value structures
+                      all_events_ind[14],       # [ 11 ] = total value units
+                      all_events_ind[15],       # [ 12 ] = total value structures
 
                       # all_events_ind[1],        # [ 1 ] = minerals
                       # all_events_ind[2],        # [ 2 ] = vespene
@@ -112,11 +131,12 @@ class SC2Env(Env):
         # sensible action set for all minigames
         if not action_ids or action_ids in [ACTIONS_MINIGAMES, ACTIONS_MINIGAMES_ALL]:
             action_ids = [0, 1, 2, 3, 4, 6, 7, 12, 13, 42, 44, 50, 91, 183, 234, 309, 331, 332, 333, 334, 451, 452, 490]
-
-        # some additional actions for minigames (not necessary to solve)
-        if action_ids == ACTIONS_MINIGAMES_ALL:
-            # action_ids += [11, 71, 72, 73, 74, 79, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
             action_ids += [11, 71, 72, 73, 74, 79, 140, 168, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
+
+        # # some additional actions for minigames (not necessary to solve)
+        # if action_ids == ACTIONS_MINIGAMES_ALL:
+        #     # action_ids += [11, 71, 72, 73, 74, 79, 239, 261, 264, 269, 274, 318, 335, 336, 453, 477]
+        #
 
         # full action space, including outdated / unusable to current race / usable only in certain cases
         if action_ids == ACTIONS_ALL:
@@ -161,22 +181,24 @@ class SC2Env(Env):
     def step(self, action):
         try:
             obs, reward, done = self.obs_wrapper(self._env.step(self.act_wrapper(action)))
-            event_indicators = processEvents(obs)
+            # event_indicators = processEvents(obs)
 
         except protocol.ConnectionError:
             # hacky fix from websocket timeout issue...
             # this results in faulty reward signals, but I guess it beats completely crashing...
             self.restart()
-            return self.reset(), 0, 1, []
+            return self.reset(), 0, 1
 
         if done and self.reset_done:
             obs = self.reset()
 
-        return obs, reward, done, event_indicators
+        return obs, reward, done\
+            # , event_indicators
 
     def reset(self):
         try:
             obs, reward, done = self.obs_wrapper(self._env.reset())
+            # event_indicators = processEvents(obs)
         except protocol.ConnectionError:
             # hacky fix from websocket timeout issue...
             # this results in faulty reward signals, but I guess it beats completely crashing...
