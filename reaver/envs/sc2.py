@@ -58,42 +58,42 @@ ACTIONS_MINIGAMES, ACTIONS_MINIGAMES_ALL, ACTIONS_ALL = ['minigames', 'minigames
 #     }
 #     return events
 
-def processEvents(obs):
-    all_events_ind = []
-    for feature_map_idx in range(3, len(obs)):
-        for i in obs[feature_map_idx]:
-            if not i == "\n":
-                all_events_ind.append(i)
-
-    curated_events = [
-                      all_events_ind[11],       # [ 0 ] = score
-                      all_events_ind[20],       # [ 1 ] = collection rate minerals
-                      all_events_ind[21],       # [ 2 ] = collection rate vespene
-                      all_events_ind[18],       # [ 3 ] = collected minerals
-                      all_events_ind[19],       # [ 4 ] = collected vespene
-
-                      all_events_ind[3],        # [ 5 ] = food used
-                      all_events_ind[4],        # [ 6 ] = food cap
-                      all_events_ind[6],        # [ 7 ] = food workers
-                      # all_events_ind[5],        # [ 8 ] = food army
-
-                      all_events_ind[12],       # [ 9 ] = idle prod time
-                      all_events_ind[7],        # [ 10 ] = idle workers
-
-                      all_events_ind[14],       # [ 11 ] = total value units
-                      all_events_ind[15],       # [ 12 ] = total value structures
-
-                      # all_events_ind[1],        # [ 1 ] = minerals
-                      # all_events_ind[2],        # [ 2 ] = vespene
-                      # all_events_ind[22],       # [ 7 ] = spent minerals
-                      # all_events_ind[23],       # [ 8 ] = spent vespene
-                      # all_events_ind[5],        # [ 14 ] = food army
-                      # all_events_ind[8],        # [ 15 ] = army count
-
-                      # all_events_ind[16],       # [ 18 ] = killed value units
-                      # all_events_ind[17]        # [ 19 ] = killed value structures
-                      ]
-    return curated_events
+# def processEvents(obs):
+#     all_events_ind = []
+#     for feature_map_idx in range(3, len(obs)):
+#         for i in obs[feature_map_idx]:
+#             if not i == "\n":
+#                 all_events_ind.append(i)
+#
+#     curated_events = [
+#                       all_events_ind[11],       # [ 0 ] = score
+#                       all_events_ind[20],       # [ 1 ] = collection rate minerals
+#                       all_events_ind[21],       # [ 2 ] = collection rate vespene
+#                       all_events_ind[18],       # [ 3 ] = collected minerals
+#                       all_events_ind[19],       # [ 4 ] = collected vespene
+#
+#                       all_events_ind[3],        # [ 5 ] = food used
+#                       all_events_ind[4],        # [ 6 ] = food cap
+#                       all_events_ind[6],        # [ 7 ] = food workers
+#                       # all_events_ind[5],        # [ 8 ] = food army
+#
+#                       all_events_ind[12],       # [ 9 ] = idle prod time
+#                       all_events_ind[7],        # [ 10 ] = idle workers
+#
+#                       all_events_ind[14],       # [ 11 ] = total value units
+#                       all_events_ind[15],       # [ 12 ] = total value structures
+#
+#                       # all_events_ind[1],        # [ 1 ] = minerals
+#                       # all_events_ind[2],        # [ 2 ] = vespene
+#                       # all_events_ind[22],       # [ 7 ] = spent minerals
+#                       # all_events_ind[23],       # [ 8 ] = spent vespene
+#                       # all_events_ind[5],        # [ 14 ] = food army
+#                       # all_events_ind[8],        # [ 15 ] = army count
+#
+#                       # all_events_ind[16],       # [ 18 ] = killed value units
+#                       # all_events_ind[17]        # [ 19 ] = killed value structures
+#                       ]
+#     return curated_events
 
 @gin.configurable
 class SC2Env(Env):
@@ -147,6 +147,7 @@ class SC2Env(Env):
 
         # by default use majority of obs features, except for some that are unnecessary for minigames
         # e.g. race-specific like creep and shields or redundant like player_id
+
         if not obs_features:
             obs_features = {
                 'screen': ['player_relative', 'selected', 'visibility_map', 'unit_hit_points_ratio', 'unit_density'],
@@ -169,6 +170,8 @@ class SC2Env(Env):
 
         self._env = sc2_env.SC2Env(
             map_name=self.id,
+            save_replay_episodes=100,
+            replay_dir= "/home/vlad/replays",
             visualize=self.render,
             agent_interface_format=[features.parse_agent_interface_format(
                 feature_screen=self.screen_spatial_dim,

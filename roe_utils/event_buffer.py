@@ -30,7 +30,7 @@ class EventBuffer:
         if len(self.events) == 0:
             if vector:
                 return np.ones(self.n)
-            clip_temp = np.clip(events[0], -2, 2)
+            clip_temp = np.clip(events[0], -100, 100)
             sum0 = np.sum(clip_temp)
             return sum0
 

@@ -17,10 +17,11 @@ flags.DEFINE_bool('render', False, 'Whether to render first(!) env.')
 flags.DEFINE_string('gpu', "0", 'GPU(s) id(s) to use. If not set TensorFlow will use CPU.')
 
 flags.DEFINE_integer('n_envs', 32, 'Number of environments to execute in parallel.')
+
 flags.DEFINE_integer('n_updates', 1000000, 'Number of train updates (1 update has batch_sz * traj_len samples).')
 
 flags.DEFINE_integer('ckpt_freq', 100, 'Number of train updates per one checkpoint save.')
-flags.DEFINE_integer('log_freq', 30, 'Number of train updates per one console log.')
+flags.DEFINE_integer('log_freq', 25, 'Number of train updates per one console log.')
 flags.DEFINE_integer('log_eps_avg', 32, 'Number of episodes to average for performance stats.')
 flags.DEFINE_integer('max_ep_len', None, 'Max number of steps an agent can take in an episode.')
 
@@ -34,10 +35,14 @@ flags.DEFINE_bool('restore', False,
                   'Restore & continue previously executed experiment. '
                   'If experiment not specified then last modified is used.')
 
-flags.DEFINE_bool('test', False,
+flags.DEFINE_bool('test', True,
                   'Run an agent in test mode: restore flag is set to true and number of envs set to 1'
                   'Loss is calculated, but gradients are not applied.'
                   'Checkpoints, summaries, log files are not updated, but console logger is enabled.')
+
+flags.DEFINE_string('actor_critic', "standard", 'Trains using Rairty of Events (default: False)')
+flags.DEFINE_string('non-spatial_features', "none", 'Trains using Rairty of Events (default: False)')
+flags.DEFINE_string('rarity', "none", 'Trains using Rairty of Events (default: False)')
 
 flags.DEFINE_bool('roe', True,
                   'Trains using Rairty of Events (default: False)')
