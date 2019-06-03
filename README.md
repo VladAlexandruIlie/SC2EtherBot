@@ -6,7 +6,7 @@ Academia profile: https://itu.academia.edu/VladIlie
 # Author: Vlad Alexandru Ilie
 # Supervisors: Sebastian Risi & Niels Orsleff Justesen
 
-Trained models can be downloaded from: dropbox ... to be added asap
+Trained models can be downloaded from: dropbox ... https://www.dropbox.com/s/kesksd5kif8v7mx/Trained%20models.7z?dl=0
 
 
 Special thanks to Roman Ring for creating the Reaver framework:
