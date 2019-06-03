@@ -6,7 +6,7 @@ Academia profile: https://itu.academia.edu/VladIlie
 # Author: Vlad Alexandru Ilie
 # Supervisors: Sebastian Risi & Niels Orsleff Justesen
 
-
+Trained models can be downloaded from: https://github.com/VladAlexandruIlie/SC2EtherBot_trained_models
 
 
 Special thanks to Roman Ring for creating the Reaver framework:
