@@ -1,10 +1,13 @@
 # MSc Thesis: On Reinforcement Learning and Rarity of Events algorithms in the Starcraft II Learning Environment
+
+The final version of the MSc Thesis to be uploaded to Academia.edu asap
+Academia profile: https://itu.academia.edu/VladIlie
+
 # Author: Vlad Alexandru Ilie
 # Supervisors: Sebastian Risi & Niels Orsleff Justesen
 
 
-The final version of the MSc Thesis to be uploaded to Academia.edu asap
-Academia profile: 
+
 
 Special thanks to Roman Ring for creating the Reaver framework:
 https://github.com/inoryy/reaver
@@ -24,4 +27,4 @@ Install Ubuntu 18.04 and follow this guide for installing and setting up tensorf
 # Video Recording
 
 Video of all experiments will be uploaded asap.
-Youtube channel: 
+Youtube channel: https://www.youtube.com/channel/UC0sHsreA9PhSvXcd4f4xUkQ
