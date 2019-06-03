@@ -1,3 +1,6 @@
+Special thanks to Roman Ring for creating the Reaver framework:
+https://github.com/inoryy/reaver
+
 # Reaver: Modular Deep Reinforcement Learning Framework
 
 [![MoveToBeacon](https://user-images.githubusercontent.com/195271/48730921-66b6fe00-ec44-11e8-9954-9f4891ff9672.gif)](https://youtu.be/gEyBzcPU5-w)
