@@ -1,5 +1,5 @@
 # MSc Thesis: On Reinforcement Learning and Rarity of Events algorithms in the Starcraft II Learning Environment
-# Author:
+# Author: Vlad Alexandru Ilie
 # Supervisors: Sebastian Risi & Niels Orsleff Justesen
 
 
